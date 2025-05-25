@@ -1,0 +1,420 @@
+"use client";
+
+import { motion } from "framer-motion";
+import {
+  ArrowDown,
+  Github,
+  Linkedin,
+  MessageCircle,
+  ExternalLink,
+} from "lucide-react";
+import { useState, useEffect } from "react";
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 60 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.8, ease: "easeOut" },
+};
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+export default function Portfolio() {
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <div className="bg-black text-white overflow-hidden">
+      {/* Navigation */}
+      <motion.nav
+        className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-gray-800"
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.8 }}
+      >
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <motion.div
+              className="text-xl font-light"
+              whileHover={{ scale: 1.05 }}
+            >
+              Samuel Monteiro
+            </motion.div>
+            <div className="hidden md:flex space-x-8">
+              {["Sobre", "Projetos", "Skills", "Contato"].map((item) => (
+                <motion.a
+                  key={item}
+                  href={`#${item.toLowerCase()}`}
+                  className="text-gray-300 hover:text-white transition-colors duration-300"
+                  whileHover={{ y: -2 }}
+                >
+                  {item}
+                </motion.a>
+              ))}
+            </div>
+          </div>
+        </div>
+      </motion.nav>
+
+      {/* Hero Section */}
+      <section className="min-h-screen flex items-center justify-center relative">
+        <motion.div className="text-center px-6" style={{ y: scrollY * 0.5 }}>
+          <motion.h1
+            className="text-6xl md:text-8xl font-thin mb-6 leading-tight"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+          >
+            Desenvolvedor
+            <br />
+            <span className="text-gray-400">Front-end</span>
+          </motion.h1>
+
+          <motion.p
+            className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-12 font-light"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.3 }}
+          >
+            Criando experiências digitais excepcionais com código limpo e design
+            minimalista
+          </motion.p>
+
+          <motion.div
+            className="flex justify-center space-x-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.6 }}
+          >
+            {[
+              {
+                icon: Github,
+                href: "https://github.com/samuelmonteirotf",
+                label: "GitHub",
+              },
+              {
+                icon: Linkedin,
+                href: "https://www.linkedin.com/in/samuel-monteiro-junior-2534802a0/",
+                label: "LinkedIn",
+              },
+              {
+                icon: MessageCircle,
+                href: "https://wa.me/5513997575300?text=Sim%2C%20quero%20construir%20algo%20com%20impacto%21",
+                label: "WhatsApp",
+              },
+            ].map(({ icon: Icon, href, label }) => (
+              <motion.a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-3 border border-gray-700 rounded-full hover:border-white transition-colors duration-300"
+                whileHover={{ scale: 1.1, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Icon size={24} />
+              </motion.a>
+            ))}
+          </motion.div>
+        </motion.div>
+
+        <motion.div
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+        >
+          <ArrowDown className="text-gray-400" size={24} />
+        </motion.div>
+      </section>
+
+      {/* About Section */}
+      <section id="sobre" className="py-32 px-6">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+            className="grid md:grid-cols-2 gap-16 items-center"
+          >
+            <motion.div variants={fadeInUp}>
+              <h2 className="text-5xl font-thin mb-8">Sobre mim</h2>
+              <div className="space-y-6 text-gray-300 text-lg leading-relaxed">
+                <p>
+                  Sou um desenvolvedor front-end ccom foco em criar soluções
+                  digitais eficientes, seguras e voltadas a resultados
+                  concretos. Acredito que uma boa interface vai além do visual:
+                  Conecta tecnologia, usabilidade e propósito.
+                </p>
+                <p>
+                  Especializado em React, Next.js e TypeScript, aplico as
+                  melhores praticas de desenvolvimento para construir produtos
+                  rápidos, escaláveis e de fácil manutenção. Trabalho com
+                  atenção à performance, acessibilidade e experiência do
+                  usuário, sempre buscando entregar valor real para o negócio.
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div variants={fadeInUp} className="relative">
+              <div className="w-full h-96 rounded-2xl overflow-hidden">
+                <img
+                  src="/images/perfil.jpg"
+                  alt="Samuel Monteiro - Desenvolvedor Front-end"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Projects Section */}
+      <section id="projetos" className="py-32 px-6 bg-gray-950">
+        <div className="max-w-6xl mx-auto">
+          <motion.h2
+            className="text-5xl font-thin mb-16 text-center"
+            variants={fadeInUp}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+          >
+            Projetos em destaque
+          </motion.h2>
+
+          <motion.div
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+          >
+            {[
+              {
+                title: "JuriFlow",
+                description:
+                  "Projeto focado em produtividade, design limpo e aplicação prática para o dia a dia da advocacia.",
+                tech: ["Elm", "Next.js", "TypeScript", "Tailwind"],
+                image: "/images/projeto1.jpg",
+              },
+              {
+                title: "Linux",
+                description: "Interface para visualização de dados",
+                tech: ["React", "D3.js", "Node.js"],
+                image: "/images/projeto2.jpg",
+              },
+              {
+                title: "Front End",
+                description: "Aplicativo React Native para iOS/Android",
+                tech: ["React Native", "Expo", "Firebase"],
+                image: "/images/projeto3.jpg",
+              },
+            ].map((project, index) => (
+              <motion.div
+                key={index}
+                variants={fadeInUp}
+                className="group cursor-pointer"
+                whileHover={{ y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 hover:border-gray-600 transition-colors duration-300">
+                  <div className="h-48 overflow-hidden">
+                    <img
+                      src={project.image || "/placeholder.svg"}
+                      alt={project.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-medium mb-2 group-hover:text-gray-300 transition-colors">
+                      {project.title}
+                    </h3>
+                    <p className="text-gray-400 mb-4">{project.description}</p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {project.tech.map((tech) => (
+                        <span
+                          key={tech}
+                          className="px-3 py-1 bg-gray-800 rounded-full text-sm text-gray-300"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex space-x-4">
+                      <motion.button
+                        className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+                        whileHover={{ x: 5 }}
+                      >
+                        <ExternalLink size={16} />
+                        <span>Ver projeto</span>
+                      </motion.button>
+                      <motion.button
+                        className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+                        whileHover={{ x: 5 }}
+                      >
+                        <Github size={16} />
+                        <span>Código</span>
+                      </motion.button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Skills Section */}
+      <section id="skills" className="py-32 px-6">
+        <div className="max-w-6xl mx-auto">
+          <motion.h2
+            className="text-5xl font-thin mb-16 text-center"
+            variants={fadeInUp}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+          >
+            Tecnologias
+          </motion.h2>
+
+          <motion.div
+            className="grid md:grid-cols-3 gap-12"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+          >
+            {[
+              {
+                category: "Frontend",
+                skills: [
+                  "React",
+                  "Next.js",
+                  "TypeScript",
+                  "Tailwind CSS",
+                  "Framer Motion",
+                ],
+              },
+              {
+                category: "Backend",
+                skills: [
+                  "Node.js",
+                  "Express",
+                  "PostgreSQL",
+                  "MongoDB",
+                  "Prisma",
+                ],
+              },
+              {
+                category: "Ferramentas",
+                skills: ["Git", "Docker", "Vercel", "Figma", "VS Code"],
+              },
+            ].map((group, index) => (
+              <motion.div key={index} variants={fadeInUp}>
+                <h3 className="text-2xl font-light mb-6 text-gray-300">
+                  {group.category}
+                </h3>
+                <div className="space-y-3">
+                  {group.skills.map((skill) => (
+                    <motion.div
+                      key={skill}
+                      className="flex items-center space-x-3"
+                      whileHover={{ x: 10 }}
+                    >
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                      <span className="text-gray-400">{skill}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contato" className="py-32 px-6 bg-gray-950">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.h2
+            className="text-5xl font-thin mb-8"
+            variants={fadeInUp}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+          >
+            Vamos transformar sua ideia em uma solução de alto impacto.
+          </motion.h2>
+
+          <motion.p
+            className="text-xl text-gray-300 mb-12"
+            variants={fadeInUp}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+          >
+            Pronto para criar algo que gere resultado real?
+          </motion.p>
+
+          <motion.a
+            href="https://wa.me/5513997575300?text=Sim%2C%20quero%20construir%20algo%20com%20impacto%21"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center space-x-3 px-8 py-4 border border-white rounded-full hover:bg-white hover:text-black transition-all duration-300 text-lg"
+            variants={fadeInUp}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <MessageCircle size={20} />
+            <span>Sim, quero construir algo com impacto!</span>
+          </motion.a>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-12 px-6 border-t border-gray-800">
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
+          <p className="text-gray-400">
+            © 2024 Samuel Monteiro. Todos os direitos reservados.
+          </p>
+          <div className="flex space-x-6">
+            {[
+              { icon: Github, href: "https://github.com/samuelmonteirotf" },
+              {
+                icon: Linkedin,
+                href: "https://www.linkedin.com/in/samuel-monteiro-junior-2534802a0/",
+              },
+              {
+                icon: MessageCircle,
+                href: "https://wa.me/5513997575300?text=Sim%2C%20quero%20construir%20algo%20com%20impacto%21",
+              },
+            ].map(({ icon: Icon, href }, index) => (
+              <motion.a
+                key={index}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors"
+                whileHover={{ y: -2 }}
+              >
+                <Icon size={20} />
+              </motion.a>
+            ))}
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
