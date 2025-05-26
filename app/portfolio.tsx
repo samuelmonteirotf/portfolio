@@ -337,6 +337,15 @@ export default function Portfolio() {
                 projectUrl: "https://prazo-legal-production.up.railway.app/",
                 githubUrl: "https://github.com/samuelmonteirotf/Prazo-Legal",
               },
+	      {
+		title: "Habitus",
+		description: "Hábitus transforma sua rotina em uma máquina de produtividade com integração total ao Google Calendar e controle absoluto dos seus hábitos.",
+		tech: "Google Calendar API (v3)", "OAuth2 com Google (authlib)", "FastAPI", "React + Vite + TailwindCSS",
+		image: "/images/projeto4.jpg",
+		projectUrl: "https://habitus-app.vercel.app/",
+		githubUrl: "https://github.com/samuelmonteirotf/habitus-app",
+	     },
+
             ].map((project, index) => (
               <motion.div
                 key={index}
