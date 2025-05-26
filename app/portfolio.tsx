@@ -1,20 +1,14 @@
-"use client";
+"use client"
 
-import { motion } from "framer-motion";
-import {
-  ArrowDown,
-  Github,
-  Linkedin,
-  MessageCircle,
-  ExternalLink,
-} from "lucide-react";
-import { useState, useEffect } from "react";
+import { motion } from "framer-motion"
+import { ArrowDown, Github, Linkedin, MessageCircle, ExternalLink } from "lucide-react"
+import { useState, useEffect } from "react"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 60 },
   animate: { opacity: 1, y: 0 },
   transition: { duration: 0.8, ease: "easeOut" },
-};
+}
 
 const staggerContainer = {
   animate: {
@@ -22,16 +16,41 @@ const staggerContainer = {
       staggerChildren: 0.1,
     },
   },
-};
+}
 
 export default function Portfolio() {
-  const [scrollY, setScrollY] = useState(0);
+  const [scrollY, setScrollY] = useState(0)
 
   useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    const handleScroll = () => setScrollY(window.scrollY)
+    window.addEventListener("scroll", handleScroll)
+
+    // Função para scroll suave para seções
+    const handleNavClick = (e: Event) => {
+      const target = e.target as HTMLAnchorElement
+      if (target.tagName === "A" && target.getAttribute("href")?.startsWith("#")) {
+        e.preventDefault()
+        const id = target.getAttribute("href")?.substring(1)
+        const element = document.getElementById(id || "")
+        if (element) {
+          const navHeight = 80 // altura da navbar
+          const elementPosition = element.offsetTop - navHeight
+          window.scrollTo({
+            top: elementPosition,
+            behavior: "smooth",
+          })
+        }
+      }
+    }
+
+    // Adicionar event listener para cliques na navegação
+    document.addEventListener("click", handleNavClick)
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+      document.removeEventListener("click", handleNavClick)
+    }
+  }, [])
 
   return (
     <div className="bg-black text-white overflow-hidden">
@@ -44,22 +63,34 @@ export default function Portfolio() {
       >
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
-            <motion.div
-              className="text-xl font-light"
-              whileHover={{ scale: 1.05 }}
-            >
+            <motion.div className="text-xl font-light" whileHover={{ scale: 1.05 }}>
               Samuel Monteiro
             </motion.div>
             <div className="hidden md:flex space-x-8">
-              {["Sobre", "Projetos", "Skills", "Contato"].map((item) => (
-                <motion.a
-                  key={item}
-                  href={`#${item.toLowerCase()}`}
-                  className="text-gray-300 hover:text-white transition-colors duration-300"
+              {[
+                { name: "Sobre", id: "sobre" },
+                { name: "Projetos", id: "projetos" },
+                { name: "Skills", id: "skills" },
+                { name: "Contato", id: "contato" },
+              ].map((item) => (
+                <motion.button
+                  key={item.name}
+                  onClick={() => {
+                    const element = document.getElementById(item.id)
+                    if (element) {
+                      const navHeight = 80
+                      const elementPosition = element.offsetTop - navHeight
+                      window.scrollTo({
+                        top: elementPosition,
+                        behavior: "smooth",
+                      })
+                    }
+                  }}
+                  className="text-gray-300 hover:text-white transition-colors duration-300 cursor-pointer"
                   whileHover={{ y: -2 }}
                 >
-                  {item}
-                </motion.a>
+                  {item.name}
+                </motion.button>
               ))}
             </div>
           </div>
@@ -68,7 +99,92 @@ export default function Portfolio() {
 
       {/* Hero Section */}
       <section className="min-h-screen flex items-center justify-center relative">
-        <motion.div className="text-center px-6" style={{ y: scrollY * 0.5 }}>
+        {/* Tech Lines Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <svg
+            className="absolute inset-0 w-full h-full"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 1920 1080"
+            preserveAspectRatio="xMidYMid slice"
+          >
+            <defs>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            <motion.path
+              d="M 100 200 L 300 200 L 350 250 L 500 250 L 550 200 L 800 200"
+              stroke="#1e3a8a"
+              strokeWidth="2"
+              fill="none"
+              filter="url(#glow)"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{
+                duration: 4,
+                repeat: Number.POSITIVE_INFINITY,
+                repeatType: "loop",
+              }}
+            />
+            <circle cx="300" cy="200" r="3" fill="#1e3a8a" filter="url(#glow)">
+              <animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite" />
+            </circle>
+
+            <motion.path
+              d="M 1200 100 L 1200 300 L 1150 350 L 1150 500"
+              stroke="#1e3a8a"
+              strokeWidth="2"
+              fill="none"
+              filter="url(#glow)"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{
+                duration: 5,
+                repeat: Number.POSITIVE_INFINITY,
+                repeatType: "loop",
+                delay: 1,
+              }}
+            />
+            <circle cx="1200" cy="300" r="3" fill="#1e3a8a" filter="url(#glow)">
+              <animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite" begin="1s" />
+            </circle>
+
+            <motion.path
+              d="M 200 600 L 400 600 L 450 550 L 600 550 L 650 600 L 850 600"
+              stroke="#1e3a8a"
+              strokeWidth="2"
+              fill="none"
+              filter="url(#glow)"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{
+                duration: 6,
+                repeat: Number.POSITIVE_INFINITY,
+                repeatType: "loop",
+                delay: 2,
+              }}
+            />
+            <circle cx="450" cy="550" r="3" fill="#1e3a8a" filter="url(#glow)" />
+            <circle cx="650" cy="600" r="3" fill="#1e3a8a" filter="url(#glow)" />
+          </svg>
+
+          <motion.div
+            className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-blue-800 to-transparent opacity-40"
+            animate={{ y: [0, 1080] }}
+            transition={{
+              duration: 8,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "linear",
+            }}
+          />
+        </div>
+
+        <motion.div className="text-center px-6 relative z-10" style={{ y: scrollY * 0.5 }}>
           <motion.h1
             className="text-6xl md:text-8xl font-thin mb-6 leading-tight"
             initial={{ opacity: 0, scale: 0.8 }}
@@ -86,8 +202,7 @@ export default function Portfolio() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.3 }}
           >
-            Criando experiências digitais excepcionais com código limpo e design
-            minimalista
+            Transformo ideias em experiências digitais com design inteligente e código eficiente
           </motion.p>
 
           <motion.div
@@ -151,17 +266,14 @@ export default function Portfolio() {
               <h2 className="text-5xl font-thin mb-8">Sobre mim</h2>
               <div className="space-y-6 text-gray-300 text-lg leading-relaxed">
                 <p>
-                  Sou um desenvolvedor front-end ccom foco em criar soluções
-                  digitais eficientes, seguras e voltadas a resultados
-                  concretos. Acredito que uma boa interface vai além do visual:
-                  Conecta tecnologia, usabilidade e propósito.
+                  Sou um desenvolvedor front-end com foco em criar soluções digitais eficientes, seguras e voltadas a
+                  resultados concretos. Acredito que uma boa interface vai além do visual: Conecta tecnologia,
+                  usabilidade e propósito.
                 </p>
                 <p>
-                  Especializado em React, Next.js e TypeScript, aplico as
-                  melhores praticas de desenvolvimento para construir produtos
-                  rápidos, escaláveis e de fácil manutenção. Trabalho com
-                  atenção à performance, acessibilidade e experiência do
-                  usuário, sempre buscando entregar valor real para o negócio.
+                  Especializado em React, Next.js e TypeScript, aplico as melhores práticas de desenvolvimento para
+                  construir produtos rápidos, escaláveis e de fácil manutenção. Trabalho com atenção à performance,
+                  acessibilidade e experiência do usuário, sempre buscando entregar valor real para o negócio.
                 </p>
               </div>
             </motion.div>
@@ -206,18 +318,24 @@ export default function Portfolio() {
                   "Projeto focado em produtividade, design limpo e aplicação prática para o dia a dia da advocacia.",
                 tech: ["Elm", "Next.js", "TypeScript", "Tailwind"],
                 image: "/images/projeto1.jpg",
+                projectUrl: "https://juriflow.vercel.app",
+                githubUrl: "https://github.com/samuelmonteirotf/juriflow",
               },
               {
-                title: "Linux",
-                description: "Interface para visualização de dados",
-                tech: ["React", "D3.js", "Node.js"],
+                title: "Chatbot JurID - Full Stack",
+                description: "Aplicação completa para suporte a certificados digitais.",
+                tech: ["Vue.js", "Node.js"],
                 image: "/images/projeto2.jpg",
+                projectUrl: "https://chatbot-jurid.vercel.app",
+                githubUrl: "https://github.com/samuelmonteirotf/chatbot-jurid",
               },
               {
                 title: "Front End",
                 description: "Aplicativo React Native para iOS/Android",
                 tech: ["React Native", "Expo", "Firebase"],
                 image: "/images/projeto3.jpg",
+                projectUrl: "https://frontend-app.vercel.app",
+                githubUrl: "https://github.com/samuelmonteirotf/frontend-app",
               },
             ].map((project, index) => (
               <motion.div
@@ -242,29 +360,32 @@ export default function Portfolio() {
                     <p className="text-gray-400 mb-4">{project.description}</p>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {project.tech.map((tech) => (
-                        <span
-                          key={tech}
-                          className="px-3 py-1 bg-gray-800 rounded-full text-sm text-gray-300"
-                        >
+                        <span key={tech} className="px-3 py-1 bg-gray-800 rounded-full text-sm text-gray-300">
                           {tech}
                         </span>
                       ))}
                     </div>
                     <div className="flex space-x-4">
-                      <motion.button
+                      <motion.a
+                        href={project.projectUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
                         whileHover={{ x: 5 }}
                       >
                         <ExternalLink size={16} />
                         <span>Ver projeto</span>
-                      </motion.button>
-                      <motion.button
+                      </motion.a>
+                      <motion.a
+                        href={project.githubUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
                         whileHover={{ x: 5 }}
                       >
                         <Github size={16} />
                         <span>Código</span>
-                      </motion.button>
+                      </motion.a>
                     </div>
                   </div>
                 </div>
@@ -297,23 +418,11 @@ export default function Portfolio() {
             {[
               {
                 category: "Frontend",
-                skills: [
-                  "React",
-                  "Next.js",
-                  "TypeScript",
-                  "Tailwind CSS",
-                  "Framer Motion",
-                ],
+                skills: ["React", "Next.js", "TypeScript", "Tailwind CSS", "Framer Motion"],
               },
               {
                 category: "Backend",
-                skills: [
-                  "Node.js",
-                  "Express",
-                  "PostgreSQL",
-                  "MongoDB",
-                  "Prisma",
-                ],
+                skills: ["Node.js", "Express", "PostgreSQL", "MongoDB", "Prisma"],
               },
               {
                 category: "Ferramentas",
@@ -321,16 +430,10 @@ export default function Portfolio() {
               },
             ].map((group, index) => (
               <motion.div key={index} variants={fadeInUp}>
-                <h3 className="text-2xl font-light mb-6 text-gray-300">
-                  {group.category}
-                </h3>
+                <h3 className="text-2xl font-light mb-6 text-gray-300">{group.category}</h3>
                 <div className="space-y-3">
                   {group.skills.map((skill) => (
-                    <motion.div
-                      key={skill}
-                      className="flex items-center space-x-3"
-                      whileHover={{ x: 10 }}
-                    >
+                    <motion.div key={skill} className="flex items-center space-x-3" whileHover={{ x: 10 }}>
                       <div className="w-2 h-2 bg-white rounded-full"></div>
                       <span className="text-gray-400">{skill}</span>
                     </motion.div>
@@ -386,9 +489,7 @@ export default function Portfolio() {
       {/* Footer */}
       <footer className="py-12 px-6 border-t border-gray-800">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <p className="text-gray-400">
-            © 2024 Samuel Monteiro. Todos os direitos reservados.
-          </p>
+          <p className="text-gray-400">© 2024 Samuel Monteiro. Todos os direitos reservados.</p>
           <div className="flex space-x-6">
             {[
               { icon: Github, href: "https://github.com/samuelmonteirotf" },
@@ -416,5 +517,5 @@ export default function Portfolio() {
         </div>
       </footer>
     </div>
-  );
+  )
 }
