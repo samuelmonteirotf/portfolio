@@ -331,42 +331,48 @@ export default function Portfolio() {
               },
               {
                 title: "Prazo Legal",
-                description: "Uma plataforma robusta e inteligente para estimar o tempo de tramitação de processos judiciais com precisão, autoridade e dados reais.",
+                description:
+                  "Uma plataforma robusta e inteligente para estimar o tempo de tramitação de processos judiciais com precisão, autoridade e dados reais.",
                 tech: ["React", "Node.js + Express", "Tailwind CSS", "Docker"],
                 image: "/images/projeto3.jpg",
                 projectUrl: "https://prazo-legal-production.up.railway.app/",
                 githubUrl: "https://github.com/samuelmonteirotf/Prazo-Legal",
               },
-	      {
-		title: "Habitus",
-		description: "Hábitus transforma sua rotina em uma máquina de produtividade com integração total ao Google Calendar e controle absoluto dos seus hábitos.",
-		tech: ["Google Calendar API (v3)","OAuth2 com Google (authlib)","FastAPI","React + Vite + TailwindCSS"],
-		image: "/images/projeto4.jpg",
-		projectUrl: "https://habitus-app.vercel.app/",
-		githubUrl: "https://github.com/samuelmonteirotf/habitus-app",
-	     },
-
+              {
+                title: "Habitus",
+                description:
+                  "Hábitus transforma sua rotina em uma máquina de produtividade com integração total ao Google Calendar e controle absoluto dos seus hábitos.",
+                tech: [
+                  "Google Calendar API (v3)",
+                  "OAuth2 com Google (authlib)",
+                  "FastAPI",
+                  "React + Vite + TailwindCSS",
+                ],
+                image: "/images/projeto4.jpg",
+                projectUrl: "https://habitus-app.vercel.app/",
+                githubUrl: "https://github.com/samuelmonteirotf/habitus-app",
+              },
             ].map((project, index) => (
               <motion.div
                 key={index}
                 variants={fadeInUp}
-                className="group cursor-pointer"
+                className="group cursor-pointer h-full"
                 whileHover={{ y: -10 }}
                 transition={{ duration: 0.3 }}
               >
-                <div className="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 hover:border-gray-600 transition-colors duration-300">
-                  <div className="h-48 overflow-hidden">
+                <div className="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 hover:border-gray-600 transition-colors duration-300 h-full flex flex-col">
+                  <div className="h-48 overflow-hidden flex-shrink-0">
                     <img
                       src={project.image || "/placeholder.svg"}
                       alt={project.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
-                  <div className="p-6">
+                  <div className="p-6 flex flex-col flex-grow">
                     <h3 className="text-xl font-medium mb-2 group-hover:text-gray-300 transition-colors">
                       {project.title}
                     </h3>
-                    <p className="text-gray-400 mb-4">{project.description}</p>
+                    <p className="text-gray-400 mb-4 flex-grow line-clamp-3">{project.description}</p>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {project.tech.map((tech) => (
                         <span key={tech} className="px-3 py-1 bg-gray-800 rounded-full text-sm text-gray-300">
@@ -374,7 +380,7 @@ export default function Portfolio() {
                         </span>
                       ))}
                     </div>
-                    <div className="flex space-x-4">
+                    <div className="flex space-x-4 mt-auto">
                       <motion.a
                         href={project.projectUrl}
                         target="_blank"
@@ -427,15 +433,24 @@ export default function Portfolio() {
             {[
               {
                 category: "Frontend",
-                skills: ["React", "Next.js", "TypeScript", "Tailwind CSS", "Framer Motion"],
+                skills: [
+                  "JavaScript",
+                  "TypeScript",
+                  "React",
+                  "Next.js",
+                  "Vue.js",
+                  "Elm",
+                  "Tailwind CSS",
+                  "Framer Motion",
+                ],
               },
               {
-                category: "Backend",
-                skills: ["Node.js", "Express", "PostgreSQL", "MongoDB", "Prisma"],
+                category: "Backend & APIs",
+                skills: ["Python", "FastAPI", "Node.js", "Express", "PostgreSQL", "Google APIs"],
               },
               {
                 category: "Ferramentas",
-                skills: ["Git", "Docker", "Vercel", "Figma", "VS Code"],
+                skills: ["Git", "Docker", "Vercel", "OAuth2", "Figma"],
               },
             ].map((group, index) => (
               <motion.div key={index} variants={fadeInUp}>
