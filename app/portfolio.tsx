@@ -326,16 +326,16 @@ export default function Portfolio() {
                 description: "Aplicação completa para suporte a certificados digitais.",
                 tech: ["Vue.js", "Node.js"],
                 image: "/images/projeto2.jpg",
-                projectUrl: "https://chatbot-jurid.vercel.app",
-                githubUrl: "https://github.com/samuelmonteirotf/chatbot-jurid",
+                projectUrl: "https://chatbot-jurid-production.up.railway.app/",
+                githubUrl: "https://github.com/samuelmonteirotf/Chatbot---JurID",
               },
               {
-                title: "Front End",
-                description: "Aplicativo React Native para iOS/Android",
-                tech: ["React Native", "Expo", "Firebase"],
+                title: "Prazo Legal",
+                description: "Uma plataforma robusta e inteligente para estimar o tempo de tramitação de processos judiciais com precisão, autoridade e dados reais.",
+                tech: ["React", "Node.js + Express", "Tailwind CSS", "Docker"],
                 image: "/images/projeto3.jpg",
-                projectUrl: "https://frontend-app.vercel.app",
-                githubUrl: "https://github.com/samuelmonteirotf/frontend-app",
+                projectUrl: "https://prazo-legal-production.up.railway.app/",
+                githubUrl: "https://github.com/samuelmonteirotf/Prazo-Legal",
               },
             ].map((project, index) => (
               <motion.div
