@@ -323,7 +323,7 @@ export default function Portfolio() {
               },
               {
                 title: "Chatbot JurID - Full Stack",
-                description: "Aplicação completa para suporte a certificados digitais.",
+                description: "Sistema leve, direto ao ponto e funcional, criado para responder dúvidas frequentes sobre certificados digitais..",
                 tech: ["Vue.js", "Node.js"],
                 image: "/images/projeto2.jpg",
                 projectUrl: "https://chatbot-jurid-production.up.railway.app/",
@@ -332,7 +332,7 @@ export default function Portfolio() {
               {
                 title: "Prazo Legal",
                 description:
-                  "Uma plataforma robusta e inteligente para estimar o tempo de tramitação de processos judiciais com precisão, autoridade e dados reais.",
+                  "Uma plataforma inteligente para estimar o tempo de tramitação de processos judiciais, autoridade e dados reais.",
                 tech: ["React", "Node.js + Express", "Tailwind CSS", "Docker"],
                 image: "/images/projeto3.jpg",
                 projectUrl: "https://prazo-legal-production.up.railway.app/",
