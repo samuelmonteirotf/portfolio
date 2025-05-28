@@ -305,7 +305,7 @@ export default function Portfolio() {
           </motion.h2>
 
           <motion.div
-            className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"
@@ -323,7 +323,8 @@ export default function Portfolio() {
               },
               {
                 title: "Chatbot JurID - Full Stack",
-                description: "Sistema leve, direto ao ponto e funcional, criado para responder dúvidas frequentes sobre certificados digitais..",
+                description:
+                  "Sistema leve, direto ao ponto e funcional, criado para responder dúvidas frequentes sobre certificados digitais.",
                 tech: ["Vue.js", "Node.js"],
                 image: "/images/projeto2.jpg",
                 projectUrl: "https://chatbot-jurid-production.up.railway.app/",
@@ -352,28 +353,51 @@ export default function Portfolio() {
                 projectUrl: "https://habitus-app.vercel.app/",
                 githubUrl: "https://github.com/samuelmonteirotf/habitus-app",
               },
+              {
+                title: "Institucional-Look&Shop",
+                description:
+                  "Look Shop é um site institucional vibrante e responsivo que une design moderno, integração com WhatsApp e localização interativa para oferecer uma experiência digital marcante e acolhedora.",
+                tech: ["Next.js 14", "TypeScript", "Tailwind CSS", "shadcn/ui + Lucide Icons"],
+                image: "/images/projeto5.jpg",
+                projectUrl: "https://www.lookeshop.com.br/",
+                githubUrl: "https://github.com/samuelmonteirotf/institucional-lookeshop",
+              },
+              {
+                title: "BoxOptimizer",
+                description:
+                  "BoxOptimizer é uma API de otimização de embalagem que utiliza o algoritmo FFD para agilizar o empacotamento de pedidos, escolhendo as caixas ideais e melhorando a eficiência logística.",
+                tech: [
+                  ".NET 8.0 + ASP.NET Core Web API",
+                  "Docker + Docker Compose",
+                  "Entity Framework Core + SQL Server",
+                  "JWT Authentication + Testes Automatizados (xUnit)",
+                ],
+                image: "/images/projeto6.jpg",
+                projectUrl: "https://github.com/samuelmonteirotf/BoxOptimizer",
+                githubUrl: "https://github.com/samuelmonteirotf/BoxOptimizer",
+              },
             ].map((project, index) => (
               <motion.div
                 key={index}
                 variants={fadeInUp}
-                className="group cursor-pointer h-full"
+                className="group cursor-pointer"
                 whileHover={{ y: -10 }}
                 transition={{ duration: 0.3 }}
               >
                 <div className="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 hover:border-gray-600 transition-colors duration-300 h-full flex flex-col">
                   <div className="h-48 overflow-hidden flex-shrink-0">
                     <img
-                      src={project.image || "/placeholder.svg"}
+                      src={project.image || "/placeholder.svg?height=200&width=400&query=projeto"}
                       alt={project.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
                   <div className="p-6 flex flex-col flex-grow">
-                    <h3 className="text-xl font-medium mb-2 group-hover:text-gray-300 transition-colors">
+                    <h3 className="text-xl font-medium mb-3 group-hover:text-gray-300 transition-colors">
                       {project.title}
                     </h3>
-                    <p className="text-gray-400 mb-4 flex-grow line-clamp-3">{project.description}</p>
-                    <div className="flex flex-wrap gap-2 mb-4">
+                    <p className="text-gray-400 mb-4 flex-grow leading-relaxed">{project.description}</p>
+                    <div className="flex flex-wrap gap-2 mb-6">
                       {project.tech.map((tech) => (
                         <span key={tech} className="px-3 py-1 bg-gray-800 rounded-full text-sm text-gray-300">
                           {tech}
