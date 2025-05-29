@@ -266,14 +266,10 @@ export default function Portfolio() {
               <h2 className="text-5xl font-thin mb-8">Sobre mim</h2>
               <div className="space-y-6 text-gray-300 text-lg leading-relaxed">
                 <p>
-                  Sou um desenvolvedor FullStack com foco em criar soluções digitais eficientes, seguras e voltadas a
-                  resultados concretos. Acredito que uma boa interface vai além do visual: Conecta tecnologia,
-                  usabilidade e propósito.
+                 Sou um desenvolvedor FullStack dedicado a criar soluções digitais eficientes, seguras e focadas em resultados concretos. Para mim, uma boa interface não se limita ao visual; ela conecta tecnologia, usabilidade e propósito.
                 </p>
                 <p>
-                  Especializado em React, Next.js e TypeScript, aplico as melhores práticas de desenvolvimento para
-                  construir produtos rápidos, escaláveis e de fácil manutenção. Trabalho com atenção à performance,
-                  acessibilidade e experiência do usuário, sempre buscando entregar valor real para o negócio.
+                  Tenho especialização em React, Next.js e TypeScript, aplicando as melhores práticas de desenvolvimento para construir produtos rápidos, escaláveis e de fácil manutenção. Meu trabalho é marcado pela atenção à performance, acessibilidade e experiência do usuário, sempre com o objetivo de entregar valor tangível para o negócio.
                 </p>
               </div>
             </motion.div>
