@@ -316,7 +316,7 @@ export default function Portfolio() {
                 title: "JuriFlow",
                 description:
                   "Projeto focado em produtividade, design limpo e aplicação prática para o dia a dia da advocacia.",
-                tech: ["Elm", "Next.js", "TypeScript", "Tailwind"],
+                tech: ["Next.js", "TypeScript", "Tailwind", "Lucide React", "shadcn/ui"],
                 image: "/images/projeto1.jpg",
                 projectUrl: "https://juriflow.vercel.app",
                 githubUrl: "https://github.com/samuelmonteirotf/juriflow",
@@ -325,7 +325,7 @@ export default function Portfolio() {
                 title: "Chatbot JurID - Full Stack",
                 description:
                   "Sistema leve, direto ao ponto e funcional, criado para responder dúvidas frequentes sobre certificados digitais.",
-                tech: ["Vue.js", "Node.js"],
+                tech: ["Vue.js", "Node.js/Express", "Docker"],
                 image: "/images/projeto2.jpg",
                 projectUrl: "https://chatbot-jurid-production.up.railway.app/",
                 githubUrl: "https://github.com/samuelmonteirotf/Chatbot---JurID",
@@ -334,7 +334,7 @@ export default function Portfolio() {
                 title: "Prazo Legal",
                 description:
                   "Uma plataforma inteligente para estimar o tempo de tramitação de processos judiciais, autoridade e dados reais.",
-                tech: ["React", "Node.js + Express", "Tailwind CSS", "Docker"],
+                tech: ["Vue.js", "JavaScript/note.js", "Docker"],
                 image: "/images/projeto3.jpg",
                 projectUrl: "https://prazo-legal-production.up.railway.app/",
                 githubUrl: "https://github.com/samuelmonteirotf/Prazo-Legal",
@@ -343,12 +343,7 @@ export default function Portfolio() {
                 title: "Habitus",
                 description:
                   "Hábitus transforma sua rotina em uma máquina de produtividade com integração total ao Google Calendar e controle absoluto dos seus hábitos.",
-                tech: [
-                  "Google Calendar API (v3)",
-                  "OAuth2 com Google (authlib)",
-                  "FastAPI",
-                  "React + Vite + TailwindCSS",
-                ],
+                tech: [ "Next.js(App Router)", "TypeScript", "Supabase", "Google Calendar API (v3)", "OAuth2 com Google (authlib)"],
                 image: "/images/projeto4.jpg",
                 projectUrl: "https://habitus-app.vercel.app/",
                 githubUrl: "https://github.com/samuelmonteirotf/habitus-app",
@@ -357,7 +352,7 @@ export default function Portfolio() {
                 title: "Institucional-Look&Shop",
                 description:
                   "Look Shop é um site institucional vibrante e responsivo que une design moderno, integração com WhatsApp e localização interativa para oferecer uma experiência digital marcante e acolhedora.",
-                tech: ["Next.js 14", "TypeScript", "Tailwind CSS", "shadcn/ui + Lucide Icons"],
+                tech: ["Next.js (App Router)", "TypeScript", "Tailwind CSS", "shadcn/ui + Lucide React"],
                 image: "/images/projeto5.jpg",
                 projectUrl: "https://www.lookeshop.com.br/",
                 githubUrl: "https://github.com/samuelmonteirotf/institucional-lookeshop",
@@ -366,12 +361,7 @@ export default function Portfolio() {
                 title: "BoxOptimizer",
                 description:
                   "BoxOptimizer é uma API de otimização de embalagem que utiliza o algoritmo FFD para agilizar o empacotamento de pedidos, escolhendo as caixas ideais e melhorando a eficiência logística.",
-                tech: [
-                  ".NET 8.0 + ASP.NET Core Web API",
-                  "Docker + Docker Compose",
-                  "Entity Framework Core + SQL Server",
-                  "JWT Authentication + Testes Automatizados (xUnit)",
-                ],
+                tech: [ ".Net 8", "ASP.NET Core", "C#", "JWT", "SQL Server + Entity Framework Core", "Docker"],
                 image: "/images/projeto6.jpg",
                 projectUrl: "https://github.com/samuelmonteirotf/BoxOptimizer",
                 githubUrl: "https://github.com/samuelmonteirotf/BoxOptimizer",

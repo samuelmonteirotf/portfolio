@@ -4,8 +4,8 @@ import "./globals.css"
 
 export const metadata: Metadata = {
   title: "Samuel Monteiro",
-  description: "Created with v0",
-  generator: "v0.dev",
+  description: "Created by Samuel Monteiro",
+  generator: "Samuel Monteiro",
 }
 
 export default function RootLayout({
