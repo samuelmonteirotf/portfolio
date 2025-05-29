@@ -193,7 +193,7 @@ export default function Portfolio() {
           >
             Desenvolvedor
             <br />
-            <span className="text-gray-400">Front-end</span>
+            <span className="text-gray-400">FullStack</span>
           </motion.h1>
 
           <motion.p
@@ -266,7 +266,7 @@ export default function Portfolio() {
               <h2 className="text-5xl font-thin mb-8">Sobre mim</h2>
               <div className="space-y-6 text-gray-300 text-lg leading-relaxed">
                 <p>
-                  Sou um desenvolvedor front-end com foco em criar soluções digitais eficientes, seguras e voltadas a
+                  Sou um desenvolvedor FullStack com foco em criar soluções digitais eficientes, seguras e voltadas a
                   resultados concretos. Acredito que uma boa interface vai além do visual: Conecta tecnologia,
                   usabilidade e propósito.
                 </p>
@@ -282,7 +282,7 @@ export default function Portfolio() {
               <div className="w-full h-96 rounded-2xl overflow-hidden">
                 <img
                   src="/images/perfil.jpg"
-                  alt="Samuel Monteiro - Desenvolvedor Front-end"
+                  alt="Samuel Monteiro - Desenvolvedor FullStack"
                   className="w-full h-full object-cover"
                 />
               </div>
