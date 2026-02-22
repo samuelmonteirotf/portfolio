@@ -409,21 +409,21 @@ export default function Portfolio() {
       </section>
 
       {/* Skills Section */}
-      <section id="skills" className="py-32 px-6 bg-card border-t border-border relative overflow-hidden">
-        <div className="max-w-6xl mx-auto relative z-10">
+      <section id="skills" className="py-24 px-6 bg-card border-t border-border">
+        <div className="max-w-6xl mx-auto">
           <motion.div
-            className="text-center mb-20"
+            className="mb-16"
             variants={fadeInUp}
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl md:text-5xl font-black mb-6 text-foreground">Toolkit Tecnológico</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Ferramentas modernas para desenvolver aplicações rápidas e seguras.</p>
+            <h2 className="text-4xl md:text-5xl font-black mb-6 text-foreground">A Máquina por baixo do capô.</h2>
+            <p className="text-xl text-muted-foreground w-full max-w-2xl">Não é só design bonitinho. É arquitetura pronta pra escalar, integrar painel financeiro e rodar na AWS sem chorar.</p>
           </motion.div>
 
           <motion.div
-            className="grid md:grid-cols-3 gap-8"
+            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"
@@ -431,29 +431,40 @@ export default function Portfolio() {
           >
             {[
               {
-                category: "Frontend Premium",
+                category: "Interface Premium",
                 icon: "✨",
-                skills: ["Next.js (App Router)", "React 19", "Tailwind CSS", "Framer Motion", "TypeScript", "shadcn/ui"],
+                translation: "Não faço 'sitezinho', faço painel B2B que parece produto gringo.",
+                skills: ["Next.js (App Router)", "React 19", "TypeScript", "Tailwind CSS", "shadcn/ui", "Framer Motion", "Zustand / TanStack", "WebSockets / Realtime", "Charts (Recharts)"],
               },
               {
                 category: "Backend & Dados",
                 icon: "⚙️",
-                skills: ["Node.js / Express", "Integrações API", "Supabase", "PostgreSQL", "Google APIs", "OAuth2"],
+                translation: "Arquiteturas escaláveis, multi-tenant e prontas pra faturar.",
+                skills: ["Node.js / Express", "FastAPI (Python)", "Integrações (Stripe, Asaas)", "Supabase", "PostgreSQL", "Redis / Queues", "Auth (JWT / OAuth2)", "Multi-tenant SaaS"],
               },
               {
-                category: "Infra & Ferramentas",
+                category: "Infra de Guerra",
                 icon: "🚀",
-                skills: ["Git / GitHub", "Docker", "Vercel / Railway", "Figma Design", "Responsive Layouts"],
+                translation: "O cliente nem vê, mas se sente rodando de Porsche.",
+                skills: ["GitOps / GitHub", "Docker / Compose", "CI/CD Pipelines", "Vercel / VPS", "Nginx / Traefik", "Tailscale / VPN", "Linux Servers", "Observability"],
+              },
+              {
+                category: "IA e Automação",
+                icon: "🤖",
+                translation: "Colocando robôs pra trabalhar quando você estiver dormindo.",
+                skills: ["n8n Workflows", "AI Agents / LLMs", "RAG Pipelines", "Chatbots Jurídicos", "Processamento de DOCs", "OCR & Extração", "Automação de Tarefas"],
               },
             ].map((group, index) => (
-              <motion.div key={index} variants={fadeInUp} className="bg-background border border-border p-10 rounded-3xl hover:border-primary/50 transition-all hover:shadow-xl group">
-                <div className="text-4xl mb-6 bg-secondary w-16 h-16 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">{group.icon}</div>
-                <h3 className="text-2xl font-black mb-8 text-foreground">{group.category}</h3>
-                <div className="space-y-4">
+              <motion.div key={index} variants={fadeInUp} className="bg-background border border-border p-6 rounded-3xl hover:border-primary/50 transition-all group flex flex-col h-full shadow-sm hover:shadow-xl">
+                <div className="text-3xl mb-4 bg-secondary w-14 h-14 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">{group.icon}</div>
+                <h3 className="text-xl font-black mb-2 text-foreground">{group.category}</h3>
+                <p className="text-sm text-primary mb-6 font-medium italic border-l-2 border-primary/50 pl-3">“{group.translation}”</p>
+
+                <div className="space-y-3 mt-auto flex-grow flex flex-col justify-end">
                   {group.skills.map((skill) => (
-                    <motion.div key={skill} className="flex items-center space-x-3 text-muted-foreground" whileHover={{ x: 8, color: "var(--foreground)" }}>
-                      <div className="w-2 h-2 bg-primary rounded-full shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
-                      <span className="font-medium text-lg">{skill}</span>
+                    <motion.div key={skill} className="flex items-center space-x-3 text-muted-foreground" whileHover={{ x: 5, color: "var(--foreground)" }}>
+                      <div className="w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)]"></div>
+                      <span className="font-semibold text-sm">{skill}</span>
                     </motion.div>
                   ))}
                 </div>
