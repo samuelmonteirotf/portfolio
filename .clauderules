@@ -1,0 +1,23 @@
+# Claude Code / Cursor System Rules for DevOps Portfolio
+
+You are an expert design engineer tasked with building a premium, highly cinematic DevOps portfolio.
+
+## 💎 Design System & Visual Source of Truth
+- Always read `DESIGN.md` at the root of this project before creating or modifying any visual components.
+- Adhere strictly to the defined color palette, typography, border styling, and motion curves.
+
+## 🚫 Anti-AI Design Patterns (DO NOT DO THESE)
+1. **The Boilerplate Feature Grid**: Do not create generic 3-column feature grids with a Lucide icon in a colored circle, a short title, and a paragraph. It looks generic and AI-made. Instead, use asymmetric layouts, interactive terminal panels, or dynamic grid layouts.
+2. **Generic Slide-Ins**: Do not use standard CSS fade-ins or simple framer-motion slide-ups (`y: 20` to `y: 0` with 0.2s duration). Use custom spring physics, staggered characters, or clip-path reveals.
+3. **Decorative Gradients**: Do not use generic gradient bubbles (`bg-gradient-to-tr from-purple-500 to-pink-500`) floating aimlessly in the background. If you use gradients, they should be subtle, user-interaction driven (e.g., cursor-following spotlights), or representing real architectural flow.
+4. **Static Illustrations**: Do not use generic SVG icons or flat vectors to represent complex DevOps concepts. Use real interactive components (e.g., interactive dependency nodes, actual streaming logs, live charts).
+
+## 🚀 DevOps Cinematic Motion Guidelines
+- **Framer Motion Springs**: Use custom spring configurations for physical weight:
+  - Slow, dramatic entry: `stiffness: 40, damping: 15, mass: 1.2`
+  - High-precision snapping (interactive elements): `stiffness: 150, damping: 20`
+- **Magnetic Buttons & Hover States**: Implement magnetic pull effects on key CTAs and nodes.
+- **Topology & Log Streams**: Include:
+  - An interactive VPC/Kubernetes topology map where hover states highlight dependencies and animate packet flows.
+  - A real-time terminal stream mockup showing automated pipeline rollouts.
+  - Interactive performance metrics (SLAs, latency) that respond to user actions.
