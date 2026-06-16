@@ -5,15 +5,15 @@ import { competencies } from "@/lib/portfolio-data"
 export function CoreCompetencies() {
   return (
     <section
-      id="competencias"
-      aria-labelledby="competencias-heading"
+      id="competencies"
+      aria-labelledby="competencies-heading"
       className="border-t border-border py-14 md:py-16"
     >
       <RevealSection>
       <SectionHeading
         index="02"
         title="Core Competencies"
-        description="Stack de plataforma de ponta a ponta: do provisionamento à operação e confiabilidade."
+        description="End-to-end platform stack: from provisioning to operation and reliability."
       />
       <RevealGroup className="rounded-md border border-border bg-card" stagger={0.08}>
         {competencies.map((category) => (

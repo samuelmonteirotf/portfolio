@@ -7,15 +7,15 @@ import { certifications, experiences } from "@/lib/portfolio-data"
 export function ExperienceSection() {
   return (
     <section
-      id="experiencia"
-      aria-labelledby="experiencia-heading"
+      id="experience"
+      aria-labelledby="experience-heading"
       className="border-t border-border py-14 md:py-16"
     >
       <RevealSection>
       <SectionHeading
         index="05"
-        title="Trajetória & Certificações"
-        description="8 anos evoluindo de operação de infraestrutura para engenharia de plataforma e confiabilidade."
+        title="Trajectory & Certifications"
+        description="8 years evolving from infrastructure operations to platform and reliability engineering."
       />
 
       <div className="grid gap-10 lg:grid-cols-[1.5fr_1fr]">
@@ -38,7 +38,7 @@ export function ExperienceSection() {
 
         <div>
           <h3 className="mb-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            Certificações
+            Certifications
           </h3>
           <RevealGroup as="ul" className="flex flex-col gap-3" stagger={0.06}>
             {certifications.map((cert) => (

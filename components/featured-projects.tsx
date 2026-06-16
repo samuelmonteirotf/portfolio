@@ -6,15 +6,15 @@ import { projects } from "@/lib/portfolio-data"
 export function FeaturedProjects() {
   return (
     <section
-      id="projetos"
-      aria-labelledby="projetos-heading"
+      id="projects"
+      aria-labelledby="projects-heading"
       className="border-t border-border py-14 md:py-16"
     >
       <RevealSection>
       <SectionHeading
         index="03"
-        title="Projetos de Produção"
-        description="Casos reais com problema, abordagem técnica e impacto medido. Cada um resolveu um gargalo concreto de plataforma."
+        title="Production Projects"
+        description="Real cases with the problem, technical approach, and measured impact. Each solved a concrete platform bottleneck."
       />
       <RevealGroup className="flex flex-col gap-4" stagger={0.1}>
         {projects.map((project) => (
@@ -39,9 +39,9 @@ export function FeaturedProjects() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex shrink-0 items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary"
-                  aria-label={`Abrir repositório do projeto ${project.title}`}
+                  aria-label={`Open repository for project ${project.title}`}
                 >
-                  Repositório
+                  Repository
                   <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                 </a>
               ) : null}
@@ -50,7 +50,7 @@ export function FeaturedProjects() {
             <dl className="mt-4 grid gap-4 md:grid-cols-2">
               <div>
                 <dt className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                  Problema
+                  Problem
                 </dt>
                 <dd className="mt-1.5 text-pretty leading-relaxed text-muted-foreground">
                   {project.problem}
@@ -58,7 +58,7 @@ export function FeaturedProjects() {
               </div>
               <div>
                 <dt className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                  Abordagem
+                  Approach
                 </dt>
                 <dd className="mt-1.5 text-pretty leading-relaxed text-muted-foreground">
                   {project.solution}

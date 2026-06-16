@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Samuel Monteiro | DevOps & Edge Security Engineer',
   description:
-    'Portfólio de engenharia DevOps e segurança na borda: bot-firewall na Cloudflare Workers, Caddy com TLS automático, containers Docker endurecidos, malha mTLS Tailscale/WireGuard e automação que elimina o trabalho manual.',
+    'DevOps and edge security engineering portfolio: bot-firewall on Cloudflare Workers, Caddy with automated TLS, hardened Docker containers, Tailscale/WireGuard mTLS mesh, and automation that eliminates manual toil.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -45,7 +45,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="pt-BR"
+      lang="en-US"
       className={`${geistSans.variable} ${geistMono.variable} bg-background`}
     >
       <body className="font-sans antialiased">

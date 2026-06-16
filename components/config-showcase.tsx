@@ -19,14 +19,14 @@ export function ConfigShowcase() {
       <SectionHeading
         index="01"
         title="Infrastructure as Code"
-        description="Configuração real do meu stack: reverse proxy com TLS automático, containers endurecidos, bot-firewall na borda e CI/CD com scan de supply chain."
+        description="Real configuration of my stack: reverse proxy with automated TLS, hardened containers, edge bot-firewall, and CI/CD with supply chain scanning."
       />
 
       <div className="overflow-hidden rounded-lg border border-border bg-card">
         <div
           className="flex items-center gap-2 border-b border-border bg-secondary px-4 py-2.5"
           role="tablist"
-          aria-label="Exemplos de configuração"
+          aria-label="Configuration examples"
         >
           <div className="mr-2 hidden items-center gap-1.5 sm:flex" aria-hidden="true">
             <span className="h-3 w-3 rounded-full bg-border" />
