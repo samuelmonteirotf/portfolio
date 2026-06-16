@@ -21,7 +21,7 @@ export function SiteHeader() {
           </div>
         </div>
 
-        <nav aria-label="Links profissionais" className="pointer-events-auto flex flex-wrap items-center gap-3">
+        <nav aria-label="Professional links" className="pointer-events-auto flex flex-wrap items-center gap-3">
           <a
             href={profile.github}
             target="_blank"

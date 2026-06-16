@@ -22,51 +22,51 @@ type NodeInfo = { name: string; sub: string; desc: string; tags: string[] }
 const NODES: Record<string, NodeInfo> = {
   internet: {
     name: "Internet",
-    sub: "tráfego de entrada",
-    desc: "Usuários reais e bots chegam por aqui. A maior parte do tráfego é maliciosa (scrapers, requisições de datacenter) e é barrada na borda antes de tocar a origem.",
-    tags: ["~80% bots", "filtrado na borda"],
+    sub: "inbound traffic",
+    desc: "Real users and bots arrive here. Most of the traffic is malicious (scrapers, datacenter requests) and is dropped at the edge before hitting the origin.",
+    tags: ["~80% bots", "filtered at edge"],
   },
   sentinel: {
     name: "Sentinel",
-    sub: "Cloudflare Worker · borda",
-    desc: "Bot-firewall na borda. Pontua cada requisição (User-Agent · Accept-Language · versão HTTP · TLS · ASN) e decide antes de tocar a origem: bloqueia (≥80), desafia (≥60) ou libera. Durable Objects: RateLimiter por IP + Stats. Log via ctx.waitUntil, fora do caminho crítico.",
-    tags: ["−94% malicioso", "0ms latência", "$0 free tier", "Durable Objects"],
+    sub: "Cloudflare Worker · edge",
+    desc: "Edge bot-firewall. Scores each request (User-Agent · Accept-Language · HTTP version · TLS · ASN) and decides before hitting the origin: blocks (≥80), challenges (≥60) or allows. Durable Objects: RateLimiter per IP + Stats. Logged via ctx.waitUntil, outside the critical path.",
+    tags: ["−94% malicious", "0ms latency", "$0 free tier", "Durable Objects"],
   },
   realscan: {
     name: "RealScan",
-    sub: "Cloudflare Worker · borda",
-    desc: "Worker irmão do Sentinel: scanner externo de postura de segurança (headers, SPF/DMARC/DNSSEC, segredos expostos no client-side) com guarda anti-SSRF que bloqueia faixas privadas/reservadas (RFC1918).",
+    sub: "Cloudflare Worker · edge",
+    desc: "Sentinel's sibling worker: external security posture scanner (headers, SPF/DMARC/DNSSEC, exposed client-side secrets) with anti-SSRF guard that blocks private/reserved ranges (RFC1918).",
     tags: ["DoH 1.1.1.1", "SSRF-guard", "headers audit"],
   },
   caddy: {
     name: "Caddy 2",
     sub: "edge-1 · reverse proxy",
-    desc: "Reverse proxy no VPS edge-1 com TLS automático (ACME, sem cron de renovação). Aplica headers de segurança em toda resposta e faz health-check ativo do upstream.",
+    desc: "Reverse proxy on the edge-1 VPS with automated TLS (ACME, no renewal cron). Enforces security headers on every response and performs active upstream health-checks.",
     tags: ["auto-TLS", "HSTS · CSP · XFO", "/healthz 10s", "round_robin"],
   },
   api: {
     name: "API",
     sub: "edge-1 · docker :8080",
-    desc: "Container Docker endurecido: rootfs read-only, usuário não-root (uid 10001), todas as capabilities removidas (cap_drop ALL), no-new-privileges e tmpfs. Imagem versionada por SHA no ghcr.",
+    desc: "Hardened Docker container: read-only rootfs, non-root user (uid 10001), all capabilities dropped (cap_drop ALL), no-new-privileges, and tmpfs. SHA-versioned image on ghcr.",
     tags: ["uid 10001", "ro-rootfs", "cap_drop ALL", "0.5cpu / 256M"],
   },
   postgres: {
     name: "Postgres",
     sub: "self-hosted · docker",
-    desc: "Banco relacional primário, self-hosted em Docker com volume persistente, WAL e autovacuum.",
+    desc: "Primary relational database, self-hosted in Docker with persistent volume, WAL, and autovacuum.",
     tags: ["volume pg_data", "WAL", "autovacuum"],
   },
   redis: {
     name: "Redis",
     sub: "self-hosted · docker",
-    desc: "Cache e pub/sub, self-hosted em Docker com volume persistente e limite de memória.",
+    desc: "Cache and pub/sub, self-hosted in Docker with persistent volume and memory limit.",
     tags: ["volume redis_data", "pub/sub", "maxmemory 256mb"],
   },
   tailscale: {
     name: "Tailscale",
-    sub: "malha mTLS · WireGuard",
-    desc: "Malha privada WireGuard com mTLS conectando as máquinas (arch-ws · macOS · edge-1). O SSH de deploy só trafega pelo tailnet — a porta 22 nunca fica exposta na internet.",
-    tags: ["WireGuard mTLS", "3 peers", "ssh-only", "sem :22 público"],
+    sub: "mTLS mesh · WireGuard",
+    desc: "Private WireGuard mesh with mTLS connecting the machines (arch-ws · macOS · edge-1). Deployment SSH only travels through the tailnet — port 22 is never exposed to the public internet.",
+    tags: ["WireGuard mTLS", "3 peers", "ssh-only", "no public :22"],
   },
 }
 
@@ -117,8 +117,8 @@ export function InfraControlRoom() {
     >
       <SectionHeading
         index="04"
-        title="Sala de Controle"
-        description="Topologia da minha infra de edge-security — da borda até a origem. Arraste pra girar; clique num nó pra inspecionar o que ele faz, como está endurecido e os números reais."
+        title="Control Room"
+        description="My edge-security infrastructure topology — from the edge to the origin. Drag to rotate; click on a node to inspect what it does, how it's hardened, and real metrics."
       />
 
       {/* status — slim, sem caixa */}
@@ -135,7 +135,7 @@ export function InfraControlRoom() {
             )}
             <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: GREEN }} />
           </span>
-          <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-foreground">Sistema saudável</span>
+          <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-foreground">System healthy</span>
         </span>
         <span className="font-mono text-[11px] text-muted-foreground">· monteirotf.com</span>
         <span className="ml-auto hidden font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:inline">
@@ -153,7 +153,7 @@ export function InfraControlRoom() {
       </div>
 
       {/* legenda navegável (teclado / leitor de tela) — controla a mesma seleção */}
-      <div className="mt-3 flex flex-wrap gap-1.5" role="tablist" aria-label="Nós da topologia">
+      <div className="mt-3 flex flex-wrap gap-1.5" role="tablist" aria-label="Topology nodes">
         {ORDER.map((id) => {
           const active = selected === id
           return (

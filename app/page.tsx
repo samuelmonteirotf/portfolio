@@ -31,7 +31,7 @@ export default function Page() {
             <span className="font-mono text-xs">{profile.role}</span>
           </div>
           <span className="font-mono text-xs sm:text-right">
-            © {year} · Todos os direitos reservados.
+            © {year} · All rights reserved.
           </span>
         </div>
       </footer>

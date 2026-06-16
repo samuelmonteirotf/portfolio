@@ -3,20 +3,20 @@ import { RevealSection } from "@/components/motion/reveal"
 import { profile } from "@/lib/portfolio-data"
 
 const highlights = [
-  { label: "Experiência", value: "4+ anos" },
-  { label: "Foco", value: "Edge Security & Infra" },
-  { label: "Base", value: profile.location },
+  { label: "Experience", value: "4+ years" },
+  { label: "Focus", value: "Edge Security & Infra" },
+  { label: "Location", value: profile.location },
 ]
 
 export function ProfessionalSummary() {
   return (
     <section
-      id="resumo"
-      aria-labelledby="resumo-heading"
+      id="summary"
+      aria-labelledby="summary-heading"
       className="border-t border-border py-14 md:py-16"
     >
-      <h2 id="resumo-heading" className="sr-only">
-        Resumo profissional
+      <h2 id="summary-heading" className="sr-only">
+        Professional summary
       </h2>
 
       <RevealSection>
@@ -46,11 +46,11 @@ export function ProfessionalSummary() {
               priority
               className="object-cover object-[center_38%] saturate-[0.9] brightness-[0.96] contrast-[1.04]"
             />
-            {/* vinheta: foca o rosto e disfarça a estante do fundo */}
+            {/* vignette: focuses the face and hides the background shelf */}
             <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(circle at 50% 42%, transparent 34%, rgba(3,3,3,0.92) 100%)" }} />
-            {/* toque frio BEM sutil (sem virar smurf), integra à paleta */}
+            {/* subtle cold touch (without turning into a smurf), integrates into the palette */}
             <div className="pointer-events-none absolute inset-0 mix-blend-soft-light" style={{ background: "#0b3a48", opacity: 0.3 }} />
-            {/* funde a base no preto */}
+            {/* melts the base into black */}
             <div className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(to top, #030303 0%, transparent 48%)" }} />
           </div>
 
@@ -69,7 +69,7 @@ export function ProfessionalSummary() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-50" style={{ background: "#00f5ff" }} />
                   <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: "#00f5ff" }} />
                 </span>
-                <span className="text-sm text-foreground">Disponível para projetos</span>
+                <span className="text-sm text-foreground">Available for projects</span>
               </div>
             ) : null}
           </dl>

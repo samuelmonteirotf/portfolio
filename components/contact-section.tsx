@@ -12,16 +12,14 @@ const channels = [
 export function ContactSection() {
   return (
     <section
-      id="contato"
-      aria-labelledby="contato-heading"
+      id="contact"
+      aria-labelledby="contact-heading"
       className="border-t border-border py-14 md:py-16"
     >
       <RevealSection>
-      <SectionHeading index="06" title="Contato" />
+      <SectionHeading index="06" title="Contact" />
       <p className="mb-8 max-w-2xl text-pretty leading-relaxed text-muted-foreground">
-        Disponível para discutir arquitetura de infraestrutura, confiabilidade
-        de plataformas e automação de entregas. Resposta direta pelos canais
-        abaixo.
+        Available to discuss infrastructure architecture, platform reliability, and delivery automation. Direct response through the channels below.
       </p>
       <RevealGroup className="grid grid-cols-1 gap-4 sm:grid-cols-3" stagger={0.08}>
         {channels.map(({ label, href, Icon }) => (
