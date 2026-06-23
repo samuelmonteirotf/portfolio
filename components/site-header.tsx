@@ -1,6 +1,7 @@
 import { ChevronDown, Globe } from "lucide-react"
 import { GithubIcon, LinkedInIcon, MailIcon } from "@/components/brand-icons"
 import { HeroBackdrop } from "@/components/hero-backdrop"
+import { ResumeDownload } from "@/components/resume-download"
 import { profile } from "@/lib/portfolio-data"
 
 export function SiteHeader() {
@@ -50,6 +51,7 @@ export function SiteHeader() {
           >
             <MailIcon className="h-5 w-5" />
           </a>
+          <ResumeDownload />
         </nav>
       </div>
 

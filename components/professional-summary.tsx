@@ -37,7 +37,7 @@ export function ProfessionalSummary() {
         </div>
 
         <aside className="flex max-w-[15rem] flex-col gap-5">
-          <div className="relative isolate aspect-square w-full overflow-hidden rounded-xl border border-border ring-1 ring-inset ring-[#00f5ff]/20">
+          <div className="relative isolate aspect-square w-full overflow-hidden rounded-xl border border-border ring-1 ring-inset ring-[#e9eef5]/15">
             <Image
               src="/avatar.jpg"
               alt={profile.name}
@@ -48,8 +48,8 @@ export function ProfessionalSummary() {
             />
             {/* vignette: focuses the face and hides the background shelf */}
             <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(circle at 50% 42%, transparent 34%, rgba(3,3,3,0.92) 100%)" }} />
-            {/* subtle cold touch (without turning into a smurf), integrates into the palette */}
-            <div className="pointer-events-none absolute inset-0 mix-blend-soft-light" style={{ background: "#0b3a48", opacity: 0.3 }} />
+            {/* subtle cool steel sheen (neutral, no color cast), integrates into the palette */}
+            <div className="pointer-events-none absolute inset-0 mix-blend-soft-light" style={{ background: "#2a3340", opacity: 0.3 }} />
             {/* melts the base into black */}
             <div className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(to top, #030303 0%, transparent 48%)" }} />
           </div>
@@ -66,8 +66,8 @@ export function ProfessionalSummary() {
             {profile.available ? (
               <div className="flex items-center gap-2 pt-0.5">
                 <span className="relative flex h-2 w-2" aria-hidden="true">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-50" style={{ background: "#00f5ff" }} />
-                  <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: "#00f5ff" }} />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-50" style={{ background: "#e9eef5" }} />
+                  <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: "#e9eef5" }} />
                 </span>
                 <span className="text-sm text-foreground">Available for projects</span>
               </div>
