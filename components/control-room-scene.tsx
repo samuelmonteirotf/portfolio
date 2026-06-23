@@ -12,7 +12,7 @@ import * as THREE from "three"
  * Ícones brancos com glow, fluxos fibra-óptica cyan descendo, drag suave.
  * ------------------------------------------------------------------ */
 
-const CYAN = "#00f5ff"
+const SILVER = "#e9eef5"
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
 const easeOutBack = (x: number) => {
   const c1 = 1.70158
@@ -30,7 +30,7 @@ const CrFiberMaterial = shaderMaterial(
     uBaseAlpha: 0.1,
     uCore: 2.2,
     uBrand: new THREE.Color("#ffffff"),
-    uCyan: new THREE.Color(CYAN),
+    uCyan: new THREE.Color(SILVER),
   },
   /* glsl */ `
     varying vec2 vUv;
@@ -95,7 +95,7 @@ const EDGES: EdgeDef[] = [
   { id: "c-a", from: NODE_BY_ID.caddy.pos, to: NODE_BY_ID.api.pos, fromId: "caddy", toId: "api", phase: 0.1, speed: 0.3 },
   { id: "a-p", from: NODE_BY_ID.api.pos, to: NODE_BY_ID.postgres.pos, fromId: "api", toId: "postgres", phase: 0.3, speed: 0.28 },
   { id: "a-rd", from: NODE_BY_ID.api.pos, to: NODE_BY_ID.redis.pos, fromId: "api", toId: "redis", phase: 0.7, speed: 0.28 },
-  { id: "t-c", from: NODE_BY_ID.tailscale.pos, to: NODE_BY_ID.caddy.pos, fromId: "tailscale", toId: "caddy", phase: 0.4, brand: "#9fb2c4", radius: 0.004, baseAlpha: 0.03, core: 1.4, speed: 0.18 },
+  { id: "t-c", from: NODE_BY_ID.tailscale.pos, to: NODE_BY_ID.caddy.pos, fromId: "tailscale", toId: "caddy", phase: 0.4, brand: "#cfd8e3", radius: 0.004, baseAlpha: 0.03, core: 1.4, speed: 0.18 },
 ]
 
 /* ------------------------------- globo girando ------------------------------- */
@@ -116,16 +116,16 @@ function Globe({ reduce }: { reduce: boolean }) {
         {/* núcleo de vidro escuro: occlui as linhas de trás → lê como corpo */}
         <mesh>
           <sphereGeometry args={[0.55, 32, 32]} />
-          <meshBasicMaterial color="#061318" transparent opacity={0.55} />
+          <meshBasicMaterial color="#0b0e12" transparent opacity={0.55} />
         </mesh>
         {/* grade lat/long */}
         <lineSegments geometry={wf}>
-          <lineBasicMaterial color={CYAN} transparent opacity={0.3} toneMapped={false} blending={THREE.AdditiveBlending} />
+          <lineBasicMaterial color={SILVER} transparent opacity={0.3} toneMapped={false} blending={THREE.AdditiveBlending} />
         </lineSegments>
         {/* atmosfera (halo bloom) */}
         <mesh>
           <sphereGeometry args={[0.62, 24, 16]} />
-          <meshBasicMaterial color={CYAN} transparent opacity={0.1} side={THREE.BackSide} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
+          <meshBasicMaterial color={SILVER} transparent opacity={0.1} side={THREE.BackSide} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
         </mesh>
       </group>
     </group>
@@ -187,7 +187,7 @@ function IconNode({
     <Billboard position={node.pos}>
       <mesh ref={ring}>
         <ringGeometry args={[0.33, 0.39, 48]} />
-        <meshBasicMaterial color={CYAN} transparent opacity={0} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
+        <meshBasicMaterial color={SILVER} transparent opacity={0} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
       </mesh>
       <mesh
         ref={mesh}

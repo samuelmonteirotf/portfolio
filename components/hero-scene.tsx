@@ -12,7 +12,7 @@ import * as THREE from "three"
  * nome, entrada cinematográfica escalonada, profundidade 3D, responsivo.
  * ------------------------------------------------------------------ */
 
-const CYAN = "#00f5ff"
+const SILVER = "#e9eef5"
 const R = 1.95
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
 const easeOutBack = (x: number) => {
@@ -32,7 +32,7 @@ const FiberMaterial = shaderMaterial(
     uBaseAlpha: 0.1,
     uCore: 2.2,
     uBrand: new THREE.Color("#ffffff"),
-    uCyan: new THREE.Color(CYAN),
+    uCyan: new THREE.Color(SILVER),
   },
   /* glsl vert */ `
     varying vec2 vUv;
@@ -67,11 +67,11 @@ declare module "@react-three/fiber" {
 type NodeDef = { label: string; color: string; icon: string }
 const NODES: NodeDef[] = [
   { label: "Cloudflare · Sentinel", color: "#f6821f", icon: "/icons/cloudflare.svg" },
-  { label: "Docker", color: "#3aa0ff", icon: "/icons/docker.svg" },
+  { label: "Docker", color: "#cfd8e3", icon: "/icons/docker.svg" },
   { label: "Redis", color: "#ff5b50", icon: "/icons/redis.svg" },
-  { label: "Postgres", color: "#5aa6f0", icon: "/icons/postgres.svg" },
-  { label: "Tailscale", color: "#c9c9ff", icon: "/icons/tailscale.svg" },
-  { label: "FastAPI", color: "#16c7a8", icon: "/icons/fastapi.svg" },
+  { label: "Postgres", color: "#cfd8e3", icon: "/icons/postgres.svg" },
+  { label: "Tailscale", color: "#cfd8e3", icon: "/icons/tailscale.svg" },
+  { label: "FastAPI", color: "#cfd8e3", icon: "/icons/fastapi.svg" },
   { label: "Linux", color: "#f5c518", icon: "/icons/linux.svg" },
   { label: "Caddy", color: "#2bd47a", icon: "/icons/caddy.svg" },
 ]
@@ -185,20 +185,20 @@ function Core() {
       <Billboard>
         <mesh ref={ring}>
           <ringGeometry args={[0.26, 0.31, 48]} />
-          <meshBasicMaterial color={CYAN} transparent opacity={0} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
+          <meshBasicMaterial color={SILVER} transparent opacity={0} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
         </mesh>
       </Billboard>
       <Billboard>
         <mesh>
           <planeGeometry args={[0.5, 0.5]} />
-          <meshBasicMaterial map={tex} color={CYAN} transparent depthWrite={false} toneMapped={false} />
+          <meshBasicMaterial map={tex} color={SILVER} transparent depthWrite={false} toneMapped={false} />
         </mesh>
       </Billboard>
       <Billboard position={[0, -0.42, 0]}>
         <Text fontSize={0.07} color="#7c8aa0" anchorX="center" anchorY="top" letterSpacing={0.22}>
           ORIGIN
         </Text>
-        <Text position={[0, -0.11, 0]} fontSize={0.1} color={CYAN} anchorX="center" anchorY="top" letterSpacing={0.04}>
+        <Text position={[0, -0.11, 0]} fontSize={0.1} color={SILVER} anchorX="center" anchorY="top" letterSpacing={0.04}>
           monteirotf.com
         </Text>
       </Billboard>
@@ -308,7 +308,7 @@ export default function HeroScene() {
           <ambientLight intensity={0.2} />
           <Suspense fallback={null}>
             <Cluster />
-            <Sparkles count={220} scale={[28, 15, 12]} position={[0, 0, -4]} size={2.5} speed={0.3} color={CYAN} opacity={0.6} noise={1} />
+            <Sparkles count={220} scale={[28, 15, 12]} position={[0, 0, -4]} size={2.5} speed={0.3} color={SILVER} opacity={0.6} noise={1} />
             <EffectComposer>
               <Bloom luminanceThreshold={0.2} mipmapBlur intensity={0.8} radius={0.6} />
             </EffectComposer>

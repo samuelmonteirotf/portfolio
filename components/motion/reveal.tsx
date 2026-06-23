@@ -140,7 +140,7 @@ export function ScrollSpine() {
       className="pointer-events-none fixed right-0 top-0 z-50 h-screen w-px origin-top"
       style={{
         scaleY,
-        background: "linear-gradient(to bottom, #1f2228, #1f2228 88%, #00f5ff)",
+        background: "linear-gradient(to bottom, #1f2228, #1f2228 88%, #e9eef5)",
       }}
     />
   )

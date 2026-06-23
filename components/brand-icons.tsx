@@ -26,3 +26,13 @@ export function MailIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+// Download (Heroicons solid · arrow-down-tray) — currículo.
+export function DownloadIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d="M12 1.5a.75.75 0 0 1 .75.75v9.69l3.22-3.22a.75.75 0 1 1 1.06 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06l3.22 3.22V2.25A.75.75 0 0 1 12 1.5Z" />
+      <path d="M3 15.75a.75.75 0 0 1 .75.75v3c0 .414.336.75.75.75h15a.75.75 0 0 0 .75-.75v-3a.75.75 0 0 1 1.5 0v3A2.25 2.25 0 0 1 19.5 21.75h-15A2.25 2.25 0 0 1 2.25 19.5v-3a.75.75 0 0 1 .75-.75Z" />
+    </svg>
+  )
+}
