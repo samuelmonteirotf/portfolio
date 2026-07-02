@@ -115,10 +115,10 @@ export function HeroParticles() {
     let formed = 0, first = true
 
     /* A esfera se encaixa no espaço LIVRE de verdade, medido no DOM — nunca
-     * atrás de texto, em qualquer resolução. Um bloco de texto só restringe a
-     * faixa vertical se a esfera cruzar a coluna dele HORIZONTALMENTE: no lado
-     * sem texto ela usa a altura toda; no lado com texto, centro e raio se
-     * ajustam à faixa entre identidade e console. Legendas seguem via CSS vars. */
+     * atrás de texto, em qualquer resolução. A faixa é ÚNICA para todos os
+     * modos (entre o fim da identidade e o topo do console): azul, roxa e
+     * vermelha ficam sempre na mesma altura e tamanho, só o X muda.
+     * Legendas seguem via CSS vars. */
     type BlockRect = { top: number; bottom: number; left: number; right: number } | null
     let topRect: BlockRect = null, botRect: BlockRect = null
     const header = canvas.closest("header")
@@ -132,16 +132,13 @@ export function HeroParticles() {
       return since < MERGE_MS ? [w * 0.37, w * 0.63] : [w * 0.5]
     }
 
-    function orbGeom(cxs: number[]): { cy: number; R: number } {
+    function orbGeom(): { cy: number; R: number } {
       const mob = w < 1024
       const baseR = Math.min(w, h) * (mob ? 0.15 : 0.125)
-      const span = baseR * 1.15 // folga: partículas chegam a R + sprite
       const pad = h * 0.06
       let top = pad, bot = h - pad
-      for (const cx of cxs) {
-        if (topRect && cx + span > topRect.left && cx - span < topRect.right) top = Math.max(top, topRect.bottom)
-        if (botRect && cx + span > botRect.left && cx - span < botRect.right) bot = Math.min(bot, botRect.top)
-      }
+      if (topRect) top = Math.max(top, topRect.bottom)
+      if (botRect) bot = Math.min(bot, botRect.top)
       if (bot - top < 60) { top = pad; bot = h - pad } // salvaguarda: faixa degenerada
       const cy = (top + bot) / 2
       const R = Math.max(24, Math.min(baseR, (bot - top) / 2 / 1.15))
@@ -156,8 +153,8 @@ export function HeroParticles() {
       }
       topRect = clearTop ? rel(clearTop) : null
       botRect = clearBottom ? rel(clearBottom) : null
-      // publica a geometria do modo ATUAL (posição final) pras legendas seguirem
-      const { cy, R } = orbGeom(xsFor(modeRef.current, 99999))
+      // publica a geometria (igual em todos os modos) pras legendas seguirem
+      const { cy, R } = orbGeom()
       if (header instanceof HTMLElement) {
         header.style.setProperty("--orb-cy", `${Math.round(cy)}px`)
         header.style.setProperty("--orb-r", `${Math.round(R)}px`)
@@ -171,7 +168,7 @@ export function HeroParticles() {
     // alvo de layout por modo/sub-fase
     function layout(m: ModeKey, since: number): { c: [number, number][]; col: RGB[]; R: number } {
       const cxs = xsFor(m, since)
-      const { cy: cyM, R } = orbGeom(cxs)
+      const { cy: cyM, R } = orbGeom()
       if (m === "fullstack") return { c: [[cxs[0], cyM], [cxs[0], cyM]], col: [BLUE, BLUE], R }
       if (m === "devops") return { c: [[cxs[0], cyM], [cxs[0], cyM]], col: [RED, RED], R }
       // all → split (dois orbes) e depois merge (centro, roxo)

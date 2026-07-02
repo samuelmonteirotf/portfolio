@@ -124,20 +124,35 @@ export function SiteHeader() {
                 "radial-gradient(ellipse 130% 160% at 30% 50%, rgba(3,3,3,0.9) 0%, rgba(3,3,3,0.6) 50%, transparent 100%)",
             }}
           />
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.p
-              key={`${mode}-${lang}`}
-              className="max-w-[52ch] text-pretty text-[15px] leading-[1.6] text-foreground/85 sm:text-[17px]"
-              {...swap}
-              transition={{ ...fade, delay: reduce ? 0 : 0.12 }}
-            >
-              {parts.before}
-              <span className={parts.voice === "mono" ? "font-mono font-medium" : "font-medium"} style={{ color }}>
-                {parts.token}
-              </span>
-              {parts.after}
-            </motion.p>
-          </AnimatePresence>
+          <div className="relative">
+            {/* fantasmas invisíveis empilhados: reservam a altura exata da MAIOR
+                tagline entre os modos, no idioma atual — o console não muda de
+                altura ao trocar de modo e as três esferas ficam alinhadas */}
+            <div aria-hidden="true" className="invisible grid">
+              {(["devops", "fullstack", "all"] as const).map((k) => (
+                <p
+                  key={k}
+                  className="col-start-1 row-start-1 max-w-[52ch] text-pretty text-[15px] leading-[1.6] sm:text-[17px]"
+                >
+                  {modes[k].tagline}
+                </p>
+              ))}
+            </div>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.p
+                key={`${mode}-${lang}`}
+                className="absolute inset-x-0 top-0 max-w-[52ch] text-pretty text-[15px] leading-[1.6] text-foreground/85 sm:text-[17px]"
+                {...swap}
+                transition={{ ...fade, delay: reduce ? 0 : 0.12 }}
+              >
+                {parts.before}
+                <span className={parts.voice === "mono" ? "font-mono font-medium" : "font-medium"} style={{ color }}>
+                  {parts.token}
+                </span>
+                {parts.after}
+              </motion.p>
+            </AnimatePresence>
+          </div>
 
           <ModeToggle />
 
