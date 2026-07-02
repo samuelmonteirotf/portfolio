@@ -161,6 +161,10 @@ export function HeroParticles() {
       if (header instanceof HTMLElement) {
         header.style.setProperty("--orb-cy", `${Math.round(cy)}px`)
         header.style.setProperty("--orb-r", `${Math.round(R)}px`)
+        // legenda: logo acima da borda das partículas (R * 1.15), sem invadir
+        // o bloco de identidade (a própria faixa já respeita o topo)
+        const captionY = Math.max(topRect ? topRect.bottom + 6 : h * 0.06, cy - R * 1.15 - 26)
+        header.style.setProperty("--orb-caption-y", `${Math.round(captionY)}px`)
       }
     }
 

@@ -61,8 +61,9 @@ export function SiteHeader() {
             className="pointer-events-none absolute z-[5] hidden -translate-x-1/2 font-mono text-xs font-medium uppercase tracking-[0.22em] [@media(min-width:1024px)_and_(min-height:780px)]:block"
             style={{
               left: captionLeft,
-              // clamp: nunca sobe o bastante para encostar no bloco de identidade
-              top: "max(238px, calc(47% - (min(12.5vh, 12.5vw) * 1.45) - 14px))",
+              // posição publicada pelo canvas (measure): logo acima da esfera
+              // encaixada no espaço livre, já sem risco de encostar no texto
+              top: "var(--orb-caption-y, 30%)",
               color,
             }}
           >
@@ -73,7 +74,9 @@ export function SiteHeader() {
 
       {/* topo = identidade (a constante) · meio = palco da esfera · base = console (o que a escolha reescreve) */}
       <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col justify-between gap-10 px-6 py-16 sm:py-20">
-        <div className="flex max-w-xl flex-col gap-3">
+        {/* data-orb-clear: o canvas mede estes blocos e encaixa a esfera no
+            espaço livre entre eles — nunca atrás do texto, em qualquer tela */}
+        <div data-orb-clear="top" className="flex max-w-xl flex-col gap-3">
           <span className="flex items-center gap-2.5">
             <span
               aria-hidden="true"
@@ -107,6 +110,7 @@ export function SiteHeader() {
         {/* console: régua de 2px na cor do modo — a transição de 620ms é o
             DISPERSE_MS das partículas, texto e esfera reconvergem juntos */}
         <div
+          data-orb-clear="bottom"
           className="relative flex max-w-xl flex-col gap-5 border-l-2 pl-5"
           style={{ borderColor: color, transition: "border-color 620ms ease-out" }}
         >
