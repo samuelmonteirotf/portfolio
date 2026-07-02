@@ -1,15 +1,18 @@
+"use client"
+
 import { GithubIcon, LinkedInIcon, MailIcon } from "@/components/brand-icons"
 import { SectionHeading } from "@/components/section-heading"
 import { RevealSection, RevealGroup, RevealItem } from "@/components/motion/reveal"
-import { profile } from "@/lib/portfolio-data"
-
-const channels = [
-  { label: "E-mail", href: `mailto:${profile.email}`, Icon: MailIcon },
-  { label: "GitHub", href: profile.github, Icon: GithubIcon },
-  { label: "LinkedIn", href: profile.linkedin, Icon: LinkedInIcon },
-]
+import { useContent } from "@/components/language"
 
 export function ContactSection() {
+  const { profile, ui } = useContent()
+  const channels = [
+    { label: ui.header.email, href: `mailto:${profile.email}`, Icon: MailIcon },
+    { label: "GitHub", href: profile.github, Icon: GithubIcon },
+    { label: "LinkedIn", href: profile.linkedin, Icon: LinkedInIcon },
+  ]
+
   return (
     <section
       id="contact"
@@ -17,9 +20,9 @@ export function ContactSection() {
       className="border-t border-border py-14 md:py-16"
     >
       <RevealSection>
-      <SectionHeading index="06" title="Contact" />
+      <SectionHeading section="contact" title={ui.sections.contact.title} />
       <p className="mb-8 max-w-2xl text-pretty leading-relaxed text-muted-foreground">
-        Available to discuss infrastructure architecture, platform reliability, and delivery automation. Direct response through the channels below.
+        {ui.sections.contact.description}
       </p>
       <RevealGroup className="grid grid-cols-1 gap-4 sm:grid-cols-3" stagger={0.08}>
         {channels.map(({ label, href, Icon }) => (

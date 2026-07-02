@@ -1,20 +1,37 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { DownloadIcon } from "@/components/brand-icons"
+import { usePillMode } from "@/components/pill-mode"
+import { useContent } from "@/components/language"
+import type { ModeKey } from "@/lib/portfolio-data"
 import { cn } from "@/lib/utils"
 
-/* Currículo: um botão na nav que, ao clicar, revela ali mesmo (sem modal) duas
- * opções minimalistas — EN e PT. Cada chip baixa o PDF no idioma. Fecha ao
- * clicar fora ou apertar Esc. */
-const resumes = [
-  { lang: "EN", file: "/samuel-monteiro-cv-en.pdf", filename: "Samuel Monteiro EN.pdf", aria: "English resume (PDF)" },
-  { lang: "PT", file: "/samuel-monteiro-cv-pt.pdf", filename: "Samuel Monteiro.pdf", aria: "Portuguese resume (PDF)" },
-] as const
+/* Currículo na voz mono do console: "CV ↓" revela ali mesmo (sem modal) as
+ * opções EN e PT. O arquivo servido segue o modo ativo do toggle — quem lê o
+ * lado DevOps baixa o CV DevOps (gerados por scripts/generate-cvs.mjs).
+ * Fecha ao clicar fora ou apertar Esc. */
+const SUFFIX: Record<ModeKey, string> = { devops: "-devops", fullstack: "-fullstack", all: "" }
+
+const linkStyle =
+  "-my-2 py-2 -mx-1 px-1 font-mono text-xs font-medium uppercase tracking-[0.14em] underline-offset-4 outline-none transition-colors hover:text-foreground hover:underline hover:decoration-[color:var(--mode,#e9eef5)] focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--mode,#e9eef5)]"
 
 export function ResumeDownload() {
+  const { mode } = usePillMode()
+  const { ui } = useContent()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
+
+  // fechar não pode deixar o foco preso dentro de um bloco aria-hidden
+  const close = () => {
+    if (ref.current?.contains(document.activeElement)) btnRef.current?.focus()
+    setOpen(false)
+  }
+
+  const resumes = [
+    { lang: "EN", filename: "Samuel Monteiro EN.pdf", aria: ui.resume.enAria },
+    { lang: "PT", filename: "Samuel Monteiro.pdf", aria: ui.resume.ptAria },
+  ] as const
 
   useEffect(() => {
     if (!open) return
@@ -22,7 +39,7 @@ export function ResumeDownload() {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false)
+      if (e.key === "Escape") close()
     }
     window.addEventListener("pointerdown", onPointer)
     window.addEventListener("keydown", onKey)
@@ -35,18 +52,15 @@ export function ResumeDownload() {
   return (
     <div ref={ref} className="flex items-center">
       <button
+        ref={btnRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls="resume-options"
-        aria-label="Download resume"
-        title="Download resume"
-        className={cn(
-          "inline-flex items-center justify-center rounded-md border bg-card p-2.5 transition-colors hover:border-primary hover:text-primary",
-          open ? "border-primary text-primary" : "border-border text-foreground",
-        )}
+        aria-label={ui.resume.buttonAria}
+        className={cn(linkStyle, open ? "text-foreground" : "text-muted-foreground")}
       >
-        <DownloadIcon className="h-5 w-5" />
+        CV ↓
       </button>
 
       {/* opções inline — aparecem ali mesmo, sem modal */}
@@ -54,19 +68,19 @@ export function ResumeDownload() {
         id="resume-options"
         aria-hidden={!open}
         className={cn(
-          "flex items-center gap-1.5 overflow-hidden transition-all duration-300 ease-out",
-          open ? "ml-1.5 max-w-[10rem] opacity-100" : "ml-0 max-w-0 opacity-0",
+          "flex items-center gap-3 overflow-hidden transition-all duration-300 ease-out",
+          open ? "ml-3 max-w-[8rem] opacity-100" : "ml-0 max-w-0 opacity-0",
         )}
       >
         {resumes.map((r) => (
           <a
             key={r.lang}
-            href={r.file}
+            href={`/samuel-monteiro-cv${SUFFIX[mode]}-${r.lang.toLowerCase()}.pdf`}
             download={r.filename}
             tabIndex={open ? 0 : -1}
-            aria-label={`Download ${r.aria}`}
-            onClick={() => setOpen(false)}
-            className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-card px-3 font-mono text-xs font-medium uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+            aria-label={r.aria}
+            onClick={close}
+            className={cn(linkStyle, "text-muted-foreground")}
           >
             {r.lang}
           </a>

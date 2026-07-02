@@ -1,13 +1,16 @@
 "use client"
 
 import dynamic from "next/dynamic"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { SectionHeading } from "@/components/section-heading"
+import { usePillMode } from "@/components/pill-mode"
+import { useContent, useLanguage } from "@/components/language"
 
 /* ------------------------------------------------------------------ *
  * Sala de Controle — topologia da infra em WebGL (cena em
  * control-room-scene.tsx), sem caixa, com inspector embaixo.
+ * Os textos dos nós vivem em ui.controlRoom (bilíngue).
  * ------------------------------------------------------------------ */
 
 const ControlRoomScene = dynamic(() => import("@/components/control-room-scene"), {
@@ -17,63 +20,22 @@ const ControlRoomScene = dynamic(() => import("@/components/control-room-scene")
 
 const GREEN = "#10b981"
 
-type NodeInfo = { name: string; sub: string; desc: string; tags: string[] }
-
-const NODES: Record<string, NodeInfo> = {
-  internet: {
-    name: "Internet",
-    sub: "inbound traffic",
-    desc: "Real users and bots arrive here. Most of the traffic is malicious (scrapers, datacenter requests) and is dropped at the edge before hitting the origin.",
-    tags: ["~80% bots", "filtered at edge"],
-  },
-  sentinel: {
-    name: "Sentinel",
-    sub: "Cloudflare Worker · edge",
-    desc: "Edge bot-firewall. Scores each request (User-Agent · Accept-Language · HTTP version · TLS · ASN) and decides before hitting the origin: blocks (≥80), challenges (≥60) or allows. Durable Objects: RateLimiter per IP + Stats. Logged via ctx.waitUntil, outside the critical path.",
-    tags: ["−94% malicious", "0ms latency", "$0 free tier", "Durable Objects"],
-  },
-  realscan: {
-    name: "RealScan",
-    sub: "Cloudflare Worker · edge",
-    desc: "Sentinel's sibling worker: external security posture scanner (headers, SPF/DMARC/DNSSEC, exposed client-side secrets) with anti-SSRF guard that blocks private/reserved ranges (RFC1918).",
-    tags: ["DoH 1.1.1.1", "SSRF-guard", "headers audit"],
-  },
-  caddy: {
-    name: "Caddy 2",
-    sub: "edge-1 · reverse proxy",
-    desc: "Reverse proxy on the edge-1 VPS with automated TLS (ACME, no renewal cron). Enforces security headers on every response and performs active upstream health-checks.",
-    tags: ["auto-TLS", "HSTS · CSP · XFO", "/healthz 10s", "round_robin"],
-  },
-  api: {
-    name: "API",
-    sub: "edge-1 · docker :8080",
-    desc: "Hardened Docker container: read-only rootfs, non-root user (uid 10001), all capabilities dropped (cap_drop ALL), no-new-privileges, and tmpfs. SHA-versioned image on ghcr.",
-    tags: ["uid 10001", "ro-rootfs", "cap_drop ALL", "0.5cpu / 256M"],
-  },
-  postgres: {
-    name: "Postgres",
-    sub: "self-hosted · docker",
-    desc: "Primary relational database, self-hosted in Docker with persistent volume, WAL, and autovacuum.",
-    tags: ["volume pg_data", "WAL", "autovacuum"],
-  },
-  redis: {
-    name: "Redis",
-    sub: "self-hosted · docker",
-    desc: "Cache and pub/sub, self-hosted in Docker with persistent volume and memory limit.",
-    tags: ["volume redis_data", "pub/sub", "maxmemory 256mb"],
-  },
-  tailscale: {
-    name: "Tailscale",
-    sub: "mTLS mesh · WireGuard",
-    desc: "Private WireGuard mesh with mTLS connecting the machines (arch-ws · macOS · edge-1). Deployment SSH only travels through the tailnet — port 22 is never exposed to the public internet.",
-    tags: ["WireGuard mTLS", "3 peers", "ssh-only", "no public :22"],
-  },
+/* Nomes próprios dos nós (iguais nos dois idiomas); a ordem é a da legenda */
+const NODE_NAMES: Record<string, string> = {
+  internet: "Internet",
+  sentinel: "Sentinel",
+  realscan: "RealScan",
+  caddy: "Caddy 2",
+  api: "API",
+  postgres: "Postgres",
+  redis: "Redis",
+  tailscale: "Tailscale",
 }
-
 const ORDER = ["internet", "sentinel", "realscan", "caddy", "api", "postgres", "redis", "tailscale"]
 
 function Inspector({ id, reduce }: { id: string; reduce: boolean | null }) {
-  const node = NODES[id]
+  const { ui } = useContent()
+  const node = ui.controlRoom.nodes[id]
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -84,7 +46,7 @@ function Inspector({ id, reduce }: { id: string; reduce: boolean | null }) {
         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
       >
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-          <span className="font-mono text-sm font-medium text-foreground">{node.name}</span>
+          <span className="font-mono text-sm font-medium text-foreground">{NODE_NAMES[id]}</span>
           <span className="font-mono text-xs text-muted-foreground">· {node.sub}</span>
         </div>
         <p className="mt-2 max-w-prose text-pretty text-xs leading-relaxed text-muted-foreground">
@@ -106,8 +68,39 @@ function Inspector({ id, reduce }: { id: string; reduce: boolean | null }) {
 }
 
 export function InfraControlRoom() {
+  const { mode } = usePillMode()
+  const { lang } = useLanguage()
+  const { ui } = useContent()
   const reduce = useReducedMotion()
   const [selected, setSelected] = useState("sentinel")
+
+  /* Perf: o WebGL (com Bloom full-screen) só renderiza com a seção na viewport.
+   * Nos primeiros 2,6s após montar, roda sempre — a entrada escalonada dos nós
+   * acontece exatamente como antes, esteja o usuário olhando ou não. */
+  const showScene = mode !== "fullstack"
+  const canvasWrap = useRef<HTMLDivElement>(null)
+  const [inView, setInView] = useState(true)
+  const [entryDone, setEntryDone] = useState(false)
+
+  useEffect(() => {
+    if (!showScene) return
+    setEntryDone(false)
+    const t = window.setTimeout(() => setEntryDone(true), 2600)
+    return () => window.clearTimeout(t)
+  }, [showScene])
+
+  useEffect(() => {
+    if (!showScene) return
+    const el = canvasWrap.current
+    if (!el) return
+    // lote de registros em ordem cronológica: só o último reflete o estado atual
+    const io = new IntersectionObserver((es) => setInView(es[es.length - 1].isIntersecting), { rootMargin: "160px" })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [showScene])
+
+  // topologia de infra: só no lado vermelho (devops) e no "os dois"
+  if (!showScene) return null
 
   return (
     <section
@@ -116,9 +109,9 @@ export function InfraControlRoom() {
       className="relative border-t border-border py-14 md:py-16"
     >
       <SectionHeading
-        index="04"
-        title="Control Room"
-        description="My edge-security infrastructure topology — from the edge to the origin. Drag to rotate; click on a node to inspect what it does, how it's hardened, and real metrics."
+        section="control-room"
+        title={ui.sections.controlRoom.title}
+        description={ui.sections.controlRoom.description}
       />
 
       {/* status — slim, sem caixa */}
@@ -135,33 +128,40 @@ export function InfraControlRoom() {
             )}
             <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: GREEN }} />
           </span>
-          <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-foreground">System healthy</span>
+          <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-foreground">
+            {ui.controlRoom.status}
+          </span>
         </span>
         <span className="font-mono text-[11px] text-muted-foreground">· monteirotf.com</span>
         <span className="ml-auto hidden font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:inline">
-          uptime 99.98% · malicious −94%
+          {ui.controlRoom.uptime}
         </span>
       </div>
 
       {/* canvas WebGL — full-bleed, sem borda */}
-      <div className="relative h-[58svh] min-h-[420px] w-full" aria-hidden="true">
-        <ControlRoomScene selected={selected} onSelect={setSelected} reduce={!!reduce} />
+      <div ref={canvasWrap} className="relative h-[58svh] min-h-[420px] w-full" aria-hidden="true">
+        <ControlRoomScene
+          selected={selected}
+          onSelect={setSelected}
+          reduce={!!reduce}
+          frameloop={inView || !entryDone ? "always" : "never"}
+        />
         <div
           className="pointer-events-none absolute inset-0"
           style={{ background: "radial-gradient(120% 80% at 50% 45%, transparent 55%, #030303 100%)" }}
         />
       </div>
 
-      {/* legenda navegável (teclado / leitor de tela) — controla a mesma seleção */}
-      <div className="mt-3 flex flex-wrap gap-1.5" role="tablist" aria-label="Topology nodes">
+      {/* legenda navegável (teclado / leitor de tela) — controla a mesma
+          seleção; grupo de botões, não o padrão ARIA de tabs */}
+      <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label={ui.controlRoom.legendAria}>
         {ORDER.map((id) => {
           const active = selected === id
           return (
             <button
               key={id}
               type="button"
-              role="tab"
-              aria-selected={active}
+              aria-pressed={active}
               onClick={() => setSelected(id)}
               className={`rounded-md border px-2.5 py-1 font-mono text-[11px] transition-colors ${
                 active
@@ -169,14 +169,13 @@ export function InfraControlRoom() {
                   : "border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground"
               }`}
             >
-              {NODES[id].name}
+              {NODE_NAMES[id]}
             </button>
           )
         })}
       </div>
 
-      {/* inspector */}
-      <div className="mt-4 border-t border-border pt-4">
+      <div className="mt-4 border-t border-border pt-4" key={lang}>
         <Inspector id={selected} reduce={reduce} />
       </div>
     </section>

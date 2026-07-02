@@ -1,25 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // Export estático para o Cloudflare Pages: o build gera out/ (HTML/JS/CSS
+  // puros, servidos direto do CDN). Headers de segurança em public/_headers,
+  // que o Pages aplica nativamente (headers() do Next não vale em export).
+  output: "export",
+  // dev via tailnet/LAN: sem isso o Next 16 bloqueia os assets de dev
+  // (/_next/*) em origens que não sejam localhost e a página fica só no SSR
+  allowedDevOrigins: ["100.79.202.66", "192.168.3.11"],
   images: {
     unoptimized: true,
-  },
-  // Defense-in-depth: headers de segurança viajam com o app mesmo fora do Caddy.
-  // (sem CSP estrito aqui pra não quebrar os estilos inline / WebGL do hero)
-  async headers() {
-    return [
-      {
-        source: "/:path*",
-        headers: [
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "DENY" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "geolocation=(), camera=(), microphone=()" },
-        ],
-      },
-    ]
   },
 }
 

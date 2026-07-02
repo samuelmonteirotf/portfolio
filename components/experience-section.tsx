@@ -1,10 +1,14 @@
+"use client"
+
 import { BadgeCheck } from "lucide-react"
 import { SectionHeading } from "@/components/section-heading"
 import { RevealSection, RevealGroup, RevealItem } from "@/components/motion/reveal"
 import { TimelineItem } from "@/components/timeline-item"
-import { certifications, experiences } from "@/lib/portfolio-data"
+import { useContent, useLanguage } from "@/components/language"
 
 export function ExperienceSection() {
+  const { lang } = useLanguage()
+  const { experiences, certifications, ui } = useContent()
   return (
     <section
       id="experience"
@@ -13,15 +17,15 @@ export function ExperienceSection() {
     >
       <RevealSection>
       <SectionHeading
-        index="05"
-        title="Trajectory & Certifications"
-        description="8 years evolving from infrastructure operations to platform and reliability engineering."
+        section="experience"
+        title={ui.sections.experience.title}
+        description={ui.sections.experience.description}
       />
 
       <div className="grid gap-10 lg:grid-cols-[1.5fr_1fr]">
-        <RevealGroup as="ol" className="relative self-start border-l border-border" stagger={0.09}>
+        <RevealGroup key={`t-${lang}`} as="ol" className="relative self-start border-l border-border" stagger={0.09}>
           {experiences.map((exp) => (
-            <RevealItem as="li" key={exp.role} className="relative ml-6 pb-8 last:pb-0">
+            <RevealItem as="li" key={exp.company} className="relative ml-6 pb-8 last:pb-0">
               <span
                 className="absolute -left-[31px] top-2 h-3 w-3 rounded-full border-2 border-background bg-muted-foreground"
                 aria-hidden="true"
@@ -38,9 +42,9 @@ export function ExperienceSection() {
 
         <div>
           <h3 className="mb-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            Certifications
+            {ui.experienceSection.certifications}
           </h3>
-          <RevealGroup as="ul" className="flex flex-col gap-3" stagger={0.06}>
+          <RevealGroup key={`c-${lang}`} as="ul" className="flex flex-col gap-3" stagger={0.06}>
             {certifications.map((cert) => (
               <RevealItem
                 as="li"

@@ -3,30 +3,38 @@
 import { useState } from "react"
 import { SectionHeading } from "@/components/section-heading"
 import { RevealSection } from "@/components/motion/reveal"
-import { configSnippets } from "@/lib/portfolio-data"
+import { usePillMode } from "@/components/pill-mode"
+import { useContent } from "@/components/language"
 
 export function ConfigShowcase() {
+  const { mode } = usePillMode()
+  const { configSnippets, ui } = useContent()
   const [active, setActive] = useState(configSnippets[0].id)
   const current = configSnippets.find((s) => s.id === active) ?? configSnippets[0]
+
+  // seção de infra: só faz sentido no lado vermelho (devops) e no "os dois"
+  if (mode === "fullstack") return null
 
   return (
     <section
       id="infraestrutura"
-      aria-labelledby="infraestrutura-heading"
+      aria-labelledby="infra-code-heading"
       className="border-t border-border py-14 md:py-16"
     >
       <RevealSection>
       <SectionHeading
-        index="01"
-        title="Infrastructure as Code"
-        description="Real configuration of my stack: reverse proxy with automated TLS, hardened containers, edge bot-firewall, and CI/CD with supply chain scanning."
+        section="infra-code"
+        title={ui.sections.infra.title}
+        description={ui.sections.infra.description}
       />
 
       <div className="overflow-hidden rounded-lg border border-border bg-card">
+        {/* grupo de botões (não o padrão ARIA de tabs, que exigiria roving
+            tabindex + tabpanels): cada botão alterna o snippet exibido */}
         <div
           className="flex items-center gap-2 border-b border-border bg-secondary px-4 py-2.5"
-          role="tablist"
-          aria-label="Configuration examples"
+          role="group"
+          aria-label={ui.configShowcase.tablistAria}
         >
           <div className="mr-2 hidden items-center gap-1.5 sm:flex" aria-hidden="true">
             <span className="h-3 w-3 rounded-full bg-border" />
@@ -38,8 +46,7 @@ export function ConfigShowcase() {
               <button
                 key={snippet.id}
                 type="button"
-                role="tab"
-                aria-selected={active === snippet.id}
+                aria-pressed={active === snippet.id}
                 onClick={() => setActive(snippet.id)}
                 className={`rounded-md px-3 py-1 font-mono text-xs transition-colors ${
                   active === snippet.id
@@ -62,7 +69,13 @@ export function ConfigShowcase() {
           </span>
         </div>
 
-        <pre className="overflow-x-auto p-4 text-sm leading-relaxed md:p-6">
+        {/* região rolável horizontalmente precisa ser focável por teclado */}
+        <pre
+          tabIndex={0}
+          role="region"
+          aria-label={current.filename}
+          className="overflow-x-auto p-4 text-sm leading-relaxed outline-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#e9eef5]"
+        >
           <code className="font-mono text-foreground">{current.code}</code>
         </pre>
       </div>

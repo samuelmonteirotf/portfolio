@@ -1,14 +1,18 @@
+"use client"
+
 import Image from "next/image"
 import { RevealSection } from "@/components/motion/reveal"
-import { profile } from "@/lib/portfolio-data"
-
-const highlights = [
-  { label: "Experience", value: "4+ years" },
-  { label: "Focus", value: "Edge Security & Infra" },
-  { label: "Location", value: profile.location },
-]
+import { usePillMode } from "@/components/pill-mode"
+import { useContent } from "@/components/language"
 
 export function ProfessionalSummary() {
+  const { mode } = usePillMode()
+  const { modes, profile, ui } = useContent()
+  const highlights = [
+    { label: ui.summary.experienceLabel, value: ui.summary.experienceValue },
+    { label: ui.summary.focusLabel, value: modes[mode].focus },
+    { label: ui.summary.locationLabel, value: profile.location },
+  ]
   return (
     <section
       id="summary"
@@ -16,13 +20,13 @@ export function ProfessionalSummary() {
       className="border-t border-border py-14 md:py-16"
     >
       <h2 id="summary-heading" className="sr-only">
-        Professional summary
+        {ui.summary.srHeading}
       </h2>
 
       <RevealSection>
       <div className="grid gap-10 md:grid-cols-[1fr_15rem] md:gap-12 lg:gap-16">
         <div className="max-w-[60ch] space-y-5 text-pretty">
-          {profile.summary.map((para, i) => (
+          {modes[mode].summary.map((para, i) => (
             <p
               key={i}
               className={
@@ -66,10 +70,10 @@ export function ProfessionalSummary() {
             {profile.available ? (
               <div className="flex items-center gap-2 pt-0.5">
                 <span className="relative flex h-2 w-2" aria-hidden="true">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-50" style={{ background: "#e9eef5" }} />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-50 motion-reduce:animate-none" style={{ background: "#e9eef5" }} />
                   <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: "#e9eef5" }} />
                 </span>
-                <span className="text-sm text-foreground">Available for projects</span>
+                <span className="text-sm text-foreground">{ui.summary.available}</span>
               </div>
             ) : null}
           </dl>

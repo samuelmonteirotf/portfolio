@@ -160,14 +160,16 @@ function IconNode({
   const mesh = useRef<THREE.Mesh>(null)
   const ring = useRef<THREE.Mesh>(null)
   const [hov, setHov] = useState(false)
-  const t0 = useRef<number | null>(null)
+  // tempo local acumulado por dt: o setFrameloop do R3F ZERA clock.elapsedTime
+  // a cada troca always/never — com o relógio global a entrada replayaria a
+  // cada retorno à viewport. Acumulado, ela roda uma vez e fica pronta.
+  const t = useRef(0)
   const sc = useRef(0.001)
   const isSel = selected === node.id
 
-  useFrame((s) => {
-    if (t0.current === null) t0.current = s.clock.elapsedTime
-    const e = s.clock.elapsedTime - t0.current
-    const p = clamp((e - (0.3 + node.tier * 0.08)) / 0.55, 0, 1)
+  useFrame((_, dt) => {
+    t.current += Math.min(dt, 0.1)
+    const p = clamp((t.current - (0.3 + node.tier * 0.08)) / 0.55, 0, 1)
     const enter = p <= 0 ? 0.001 : easeOutBack(p)
     const target = isSel ? 1.45 : hov ? 1.32 : isSel ? 1 : 0.96
     sc.current = THREE.MathUtils.lerp(sc.current, enter * target, 0.16)
@@ -178,7 +180,7 @@ function IconNode({
     }
     if (ring.current) {
       const rm = ring.current.material as THREE.MeshBasicMaterial
-      const breathe = isSel ? 0.45 + Math.sin(s.clock.elapsedTime * 2.2) * 0.12 : 0
+      const breathe = isSel ? 0.45 + Math.sin(t.current * 2.2) * 0.12 : 0
       rm.opacity = THREE.MathUtils.lerp(rm.opacity, isSel ? breathe : hov ? 0.4 : 0, 0.15)
     }
   })
@@ -207,6 +209,7 @@ function IconNode({
 
 function FlowLine({ edge, active, reduce }: { edge: EdgeDef; active: boolean; reduce: boolean }) {
   const matRef = useRef<any>(null)
+  const t = useRef(0) // acumulado: imune ao reset de clock do setFrameloop
   const speed = edge.speed ?? 0.32
   const baseAlpha = edge.baseAlpha ?? 0.05
   const core = edge.core ?? 2.4
@@ -221,10 +224,11 @@ function FlowLine({ edge, active, reduce }: { edge: EdgeDef; active: boolean; re
   }, [edge])
   useEffect(() => () => geo.dispose(), [geo])
 
-  useFrame((s) => {
+  useFrame((_, dt) => {
     const m = matRef.current
     if (!m) return
-    m.uHead = reduce ? 0.5 : (s.clock.elapsedTime * speed + edge.phase) % 1 // source → target
+    t.current += Math.min(dt, 0.1)
+    m.uHead = reduce ? 0.5 : (t.current * speed + edge.phase) % 1 // source → target
     m.uCore = THREE.MathUtils.lerp(m.uCore, active ? core + 1.0 : core, 0.1)
     m.uBaseAlpha = THREE.MathUtils.lerp(m.uBaseAlpha, active ? 0.18 : baseAlpha, 0.1)
   })
@@ -246,6 +250,27 @@ function FlowLine({ edge, active, reduce }: { edge: EdgeDef; active: boolean; re
   )
 }
 
+/* Com frameloop="never", um resize limpa o drawing buffer e nada repinta —
+ * a cena ficaria em branco até voltar à viewport. Avança 1 frame manualmente. */
+function ResizeRepaint() {
+  const advance = useThree((s) => s.advance)
+  const get = useThree((s) => s.get)
+  useEffect(() => {
+    let t = 0
+    const onResize = () => {
+      if (get().frameloop !== "never") return
+      window.clearTimeout(t)
+      t = window.setTimeout(() => advance(performance.now()), 80)
+    }
+    window.addEventListener("resize", onResize)
+    return () => {
+      window.clearTimeout(t)
+      window.removeEventListener("resize", onResize)
+    }
+  }, [advance, get])
+  return null
+}
+
 /* ------------------------------- mapa (drag + render) ------------------------------- */
 
 function Map({
@@ -261,6 +286,7 @@ function Map({
   const { gl, size } = useThree()
   const drag = useRef({ active: false, lx: 0, ly: 0, vx: 0, vy: 0, moved: false, dx0: 0, dy0: 0 })
   const rot = useRef({ x: -0.12, y: 0 })
+  const tSway = useRef(0) // acumulado: imune ao reset de clock do setFrameloop
   const hoverCount = useRef(0)
   const mobile = size.width < 768
 
@@ -307,7 +333,8 @@ function Map({
     }
   }, [gl])
 
-  useFrame((s, dt) => {
+  useFrame((_, dt) => {
+    tSway.current += Math.min(dt, 0.1)
     const d = drag.current
     if (!d.active && !reduce) {
       rot.current.y = clamp(rot.current.y + d.vx * 0.006, -0.6, 0.6)
@@ -315,7 +342,7 @@ function Map({
       d.vx *= 0.9
       d.vy *= 0.9
     }
-    const sway = reduce ? 0 : Math.sin(s.clock.elapsedTime * 0.3) * 0.04
+    const sway = reduce ? 0 : Math.sin(tSway.current * 0.3) * 0.04
     if (outer.current) {
       outer.current.rotation.y = THREE.MathUtils.lerp(outer.current.rotation.y, rot.current.y + sway, 0.1)
       outer.current.rotation.x = THREE.MathUtils.lerp(outer.current.rotation.x, rot.current.x, 0.1)
@@ -343,16 +370,21 @@ export default function ControlRoomScene({
   selected,
   onSelect,
   reduce = false,
+  frameloop = "always",
 }: {
   selected: string
   onSelect: (id: string) => void
   reduce?: boolean
+  // "never" congela o render (última imagem fica no canvas) quando a seção
+  // está fora da viewport — Bloom em tela cheia é caro demais pra rodar às cegas
+  frameloop?: "always" | "never"
 }) {
   return (
-    <Canvas camera={{ position: [0, 0.2, 9.5], fov: 44 }} dpr={[1, 2]} gl={{ antialias: true }}>
+    <Canvas camera={{ position: [0, 0.2, 9.5], fov: 44 }} dpr={[1, 2]} gl={{ antialias: true }} frameloop={frameloop}>
       <color attach="background" args={["#030303"]} />
       <fog attach="fog" args={["#030303", 10, 28]} />
       <ambientLight intensity={0.2} />
+      <ResizeRepaint />
       <Suspense fallback={null}>
         <Map selected={selected} onSelect={onSelect} reduce={reduce} />
         <EffectComposer>

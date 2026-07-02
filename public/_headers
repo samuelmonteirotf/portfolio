@@ -1,0 +1,7 @@
+# Headers de segurança aplicados pelo Cloudflare Pages (defense-in-depth).
+# Sem CSP estrito: os estilos inline e o WebGL do hero precisam de liberdade.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), camera=(), microphone=()

@@ -1,4 +1,3 @@
-import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
@@ -9,11 +8,33 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
+/* Metadados estáticos em PT (público primário); o conteúdo da página troca
+ * de idioma no cliente e o <html lang> é atualizado pelo LanguageProvider. */
+const SITE_URL = 'https://monteirotf.com'
+const TITLE = 'Samuel Monteiro | Engenheiro Full-Stack e DevOps'
+const DESCRIPTION =
+  'Produto em Next.js, React e FastAPI. Infraestrutura de edge com Cloudflare Workers, Docker e Rust. Portfólio com projetos em produção. Curitiba, Brasil.'
+
 export const metadata: Metadata = {
-  title: 'Samuel Monteiro | DevOps & Edge Security Engineer',
-  description:
-    'DevOps and edge security engineering portfolio: bot-firewall on Cloudflare Workers, Caddy with automated TLS, hardened Docker containers, Tailscale/WireGuard mTLS mesh, and automation that eliminates manual toil.',
-  generator: 'v0.app',
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: '/' },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: '/',
+    siteName: 'Samuel Monteiro',
+    locale: 'pt_BR',
+    type: 'website',
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'Samuel Monteiro, Engenheiro Full-Stack e DevOps' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ['/og.png'],
+  },
   icons: {
     icon: [
       {
@@ -38,6 +59,32 @@ export const viewport: Viewport = {
   themeColor: '#15181d',
 }
 
+/* Person JSON-LD: busca pelo nome é o caminho nº 1 de um recrutador */
+const personJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Samuel Monteiro',
+  jobTitle: 'Engenheiro Full-Stack e DevOps',
+  url: SITE_URL,
+  email: 'mailto:samuel@monteirotf.com',
+  address: { '@type': 'PostalAddress', addressLocality: 'Curitiba', addressCountry: 'BR' },
+  sameAs: [
+    'https://github.com/samuelmonteirotf',
+    'https://www.linkedin.com/in/samuel-monteiro-2534802a0/',
+  ],
+  knowsAbout: [
+    'DevOps',
+    'Edge Security',
+    'Cloudflare Workers',
+    'Next.js',
+    'React',
+    'FastAPI',
+    'Rust',
+    'Docker',
+    'PostgreSQL',
+  ],
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -45,12 +92,16 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en-US"
+      lang="pt-BR"
       className={`${geistSans.variable} ${geistMono.variable} bg-background`}
     >
       <body className="font-sans antialiased">
         {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
       </body>
     </html>
   )

@@ -1,9 +1,17 @@
+"use client"
+
 import { ArrowUpRight } from "lucide-react"
 import { SectionHeading } from "@/components/section-heading"
 import { RevealSection, RevealGroup, RevealItem } from "@/components/motion/reveal"
-import { projects } from "@/lib/portfolio-data"
+import { usePillMode } from "@/components/pill-mode"
+import { useContent, useLanguage } from "@/components/language"
 
 export function FeaturedProjects() {
+  const { mode } = usePillMode()
+  const { lang } = useLanguage()
+  const { modes, projects, ui } = useContent()
+  // All = todos os projetos; senão, só os da categoria escolhida
+  const shown = mode === "all" ? projects : projects.filter((p) => p.tracks.includes(mode))
   return (
     <section
       id="projects"
@@ -12,12 +20,14 @@ export function FeaturedProjects() {
     >
       <RevealSection>
       <SectionHeading
-        index="03"
-        title="Production Projects"
-        description="Real cases with the problem, technical approach, and measured impact. Each solved a concrete platform bottleneck."
+        section="projects"
+        title={ui.sections.projects.title}
+        description={modes[mode].projectsIntro}
       />
-      <RevealGroup className="flex flex-col gap-4" stagger={0.1}>
-        {projects.map((project) => (
+      {/* key: os cards trocam com modo e idioma — sem remontar o grupo, os
+          novos filhos nasceriam invisíveis num reveal que já disparou */}
+      <RevealGroup key={`${mode}-${lang}`} className="flex flex-col gap-4" stagger={0.1}>
+        {shown.map((project) => (
           <RevealItem
             as="article"
             y={18}
@@ -33,24 +43,37 @@ export function FeaturedProjects() {
                   {project.title}
                 </h3>
               </div>
-              {project.repo ? (
-                <a
-                  href={project.repo}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex shrink-0 items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary"
-                  aria-label={`Open repository for project ${project.title}`}
-                >
-                  Repository
-                  <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-                </a>
-              ) : null}
+              <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-4">
+                {project.live ? (
+                  <a
+                    href={project.live}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-sm font-medium text-foreground transition-colors hover:text-primary"
+                  >
+                    {new URL(project.live).hostname}
+                    <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                  </a>
+                ) : null}
+                {project.repo ? (
+                  <a
+                    href={project.repo}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary"
+                    aria-label={`${project.repoLabel ?? ui.projectCard.repo}: ${project.title}`}
+                  >
+                    {project.repoLabel ?? ui.projectCard.repo}
+                    <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                  </a>
+                ) : null}
+              </div>
             </div>
 
             <dl className="mt-4 grid gap-4 md:grid-cols-2">
               <div>
                 <dt className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                  Problem
+                  {ui.projectCard.problem}
                 </dt>
                 <dd className="mt-1.5 text-pretty leading-relaxed text-muted-foreground">
                   {project.problem}
@@ -58,7 +81,7 @@ export function FeaturedProjects() {
               </div>
               <div>
                 <dt className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                  Approach
+                  {ui.projectCard.approach}
                 </dt>
                 <dd className="mt-1.5 text-pretty leading-relaxed text-muted-foreground">
                   {project.solution}

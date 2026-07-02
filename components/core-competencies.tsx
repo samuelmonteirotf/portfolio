@@ -1,8 +1,16 @@
+"use client"
+
 import { SectionHeading } from "@/components/section-heading"
 import { RevealSection, RevealGroup, RevealItem } from "@/components/motion/reveal"
-import { competencies } from "@/lib/portfolio-data"
+import { usePillMode } from "@/components/pill-mode"
+import { useContent, useLanguage } from "@/components/language"
 
 export function CoreCompetencies() {
+  const { mode } = usePillMode()
+  const { lang } = useLanguage()
+  const { competencies, ui } = useContent()
+  // All = todas as categorias; senão, só as do lado escolhido
+  const shown = mode === "all" ? competencies : competencies.filter((c) => c.tracks.includes(mode))
   return (
     <section
       id="competencies"
@@ -11,12 +19,13 @@ export function CoreCompetencies() {
     >
       <RevealSection>
       <SectionHeading
-        index="02"
-        title="Core Competencies"
-        description="End-to-end platform stack: from provisioning to operation and reliability."
+        section="competencies"
+        title={ui.sections.competencies.title}
+        description={ui.sections.competencies.description}
       />
-      <RevealGroup className="rounded-md border border-border bg-card" stagger={0.08}>
-        {competencies.map((category) => (
+      {/* key: filhos trocam com modo e idioma — remontar re-arma a revelação */}
+      <RevealGroup key={`${mode}-${lang}`} className="rounded-md border border-border bg-card" stagger={0.08}>
+        {shown.map((category) => (
           <RevealItem
             as="div"
             dir="down"
