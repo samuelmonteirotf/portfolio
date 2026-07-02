@@ -7,7 +7,8 @@ import { usePillMode } from "@/components/pill-mode"
 import { useContent, useLanguage } from "@/components/language"
 
 export function FeaturedProjects() {
-  const { mode } = usePillMode()
+  // settledMode: a grade remonta depois da animação do hero, não durante
+  const { settledMode: mode } = usePillMode()
   const { lang } = useLanguage()
   const { modes, projects, ui } = useContent()
   // All = todos os projetos; senão, só os da categoria escolhida

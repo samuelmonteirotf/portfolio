@@ -68,44 +68,54 @@ function Inspector({ id, reduce }: { id: string; reduce: boolean | null }) {
 }
 
 export function InfraControlRoom() {
-  const { mode } = usePillMode()
+  // settledMode: montar/esconder WebGL durante a dispersão do hero era a
+  // principal causa da travada na troca de modo
+  const { settledMode } = usePillMode()
   const { lang } = useLanguage()
   const { ui } = useContent()
   const reduce = useReducedMotion()
   const [selected, setSelected] = useState("sentinel")
 
   /* Perf: o WebGL (com Bloom full-screen) só renderiza com a seção na viewport.
-   * Nos primeiros 2,6s após montar, roda sempre — a entrada escalonada dos nós
-   * acontece exatamente como antes, esteja o usuário olhando ou não. */
-  const showScene = mode !== "fullstack"
+   * Nos primeiros 2,6s após a primeira montagem, roda sempre — a entrada
+   * escalonada dos nós acontece como sempre. Depois de montada, a cena NUNCA
+   * desmonta: no lado full-stack ela fica hidden (display:none, frameloop
+   * congelado) — o teardown do WebGL travava o main thread por ~1,8s. */
+  const showScene = settledMode !== "fullstack"
+  const [everShown, setEverShown] = useState(false)
   const canvasWrap = useRef<HTMLDivElement>(null)
   const [inView, setInView] = useState(true)
   const [entryDone, setEntryDone] = useState(false)
 
   useEffect(() => {
-    if (!showScene) return
-    setEntryDone(false)
-    const t = window.setTimeout(() => setEntryDone(true), 2600)
-    return () => window.clearTimeout(t)
+    if (showScene) setEverShown(true)
   }, [showScene])
 
   useEffect(() => {
-    if (!showScene) return
+    if (!everShown) return
+    const t = window.setTimeout(() => setEntryDone(true), 2600)
+    return () => window.clearTimeout(t)
+  }, [everShown])
+
+  useEffect(() => {
+    if (!everShown) return
     const el = canvasWrap.current
     if (!el) return
-    // lote de registros em ordem cronológica: só o último reflete o estado atual
+    // lote de registros em ordem cronológica: só o último reflete o estado
+    // atual; com display:none o elemento não intersecta → frameloop congela
     const io = new IntersectionObserver((es) => setInView(es[es.length - 1].isIntersecting), { rootMargin: "160px" })
     io.observe(el)
     return () => io.disconnect()
-  }, [showScene])
+  }, [everShown])
 
-  // topologia de infra: só no lado vermelho (devops) e no "os dois"
-  if (!showScene) return null
+  // visitante que nunca saiu do full-stack não paga o custo do WebGL
+  if (!showScene && !everShown) return null
 
   return (
     <section
       id="control-room"
       aria-labelledby="control-room-heading"
+      hidden={!showScene}
       className="relative border-t border-border py-14 md:py-16"
     >
       <SectionHeading

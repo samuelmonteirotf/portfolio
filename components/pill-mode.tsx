@@ -1,19 +1,26 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { createContext, startTransition, useContext, useEffect, useState, type ReactNode } from "react"
 import type { ModeKey } from "@/lib/portfolio-data"
 
 /* Estado global do "modo" (pílula azul = full-stack · vermelha = devops).
  * Contexto client compartilhado entre hero, resumo e projetos. A escolha
  * persiste em localStorage; o SSR sempre parte de "devops" pra não dar
- * hydration mismatch, e o valor salvo entra depois do mount. */
-type PillModeContextValue = { mode: ModeKey; setMode: (mode: ModeKey) => void }
+ * hydration mismatch, e o valor salvo entra depois do mount.
+ *
+ * `mode` muda no clique (hero, toggle, rodapé reagem na hora). `settledMode`
+ * muda ~750ms depois: as seções pesadas abaixo da dobra (grades que remontam,
+ * WebGL) trocam com ele, DEPOIS que a dispersão da esfera terminou — montar
+ * essas seções durante a animação era o que causava a travada no clique. */
+type PillModeContextValue = { mode: ModeKey; settledMode: ModeKey; setMode: (mode: ModeKey) => void }
 
 const PillModeContext = createContext<PillModeContextValue | null>(null)
 const STORAGE_KEY = "pill-mode"
+const SETTLE_MS = 750 // > DISPERSE_MS (620ms) das partículas do hero
 
 export function PillModeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ModeKey>("devops")
+  const [settledMode, setSettledMode] = useState<ModeKey>("devops")
 
   useEffect(() => {
     // storage bloqueado (navegação privada restrita) não pode derrubar o site
@@ -23,8 +30,20 @@ export function PillModeProvider({ children }: { children: ReactNode }) {
     } catch {
       /* sem storage: segue no modo padrão */
     }
-    if (saved === "devops" || saved === "fullstack") setModeState(saved)
+    if (saved === "devops" || saved === "fullstack") {
+      setModeState(saved)
+      setSettledMode(saved) // na carga não há animação: os dois juntos
+    }
   }, [])
+
+  useEffect(() => {
+    if (settledMode === mode) return
+    const t = window.setTimeout(() => {
+      // transition: o React pode fatiar a remontagem pesada sem segurar input
+      startTransition(() => setSettledMode(mode))
+    }, SETTLE_MS)
+    return () => window.clearTimeout(t)
+  }, [mode, settledMode])
 
   const setMode = (next: ModeKey) => {
     setModeState(next)
@@ -35,7 +54,9 @@ export function PillModeProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  return <PillModeContext.Provider value={{ mode, setMode }}>{children}</PillModeContext.Provider>
+  return (
+    <PillModeContext.Provider value={{ mode, settledMode, setMode }}>{children}</PillModeContext.Provider>
+  )
 }
 
 export function usePillMode() {
@@ -46,7 +67,8 @@ export function usePillMode() {
 
 /* Ordem canônica das seções e em quais modos cada uma não aparece.
  * O índice exibido (01, 02…) é recalculado por modo pra numeração nunca
- * pular quando uma seção some. */
+ * pular quando uma seção some. Segue o settledMode: os números trocam
+ * junto com as seções, não antes. */
 const SECTION_ORDER: { key: string; hiddenIn?: ModeKey[] }[] = [
   { key: "infra-code", hiddenIn: ["fullstack"] },
   { key: "competencies" },
@@ -57,8 +79,8 @@ const SECTION_ORDER: { key: string; hiddenIn?: ModeKey[] }[] = [
 ]
 
 export function useSectionIndex(key: string): string | null {
-  const { mode } = usePillMode()
-  const visible = SECTION_ORDER.filter((s) => !s.hiddenIn?.includes(mode))
+  const { settledMode } = usePillMode()
+  const visible = SECTION_ORDER.filter((s) => !s.hiddenIn?.includes(settledMode))
   const i = visible.findIndex((s) => s.key === key)
   return i === -1 ? null : String(i + 1).padStart(2, "0")
 }

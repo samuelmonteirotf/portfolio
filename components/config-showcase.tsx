@@ -7,7 +7,8 @@ import { usePillMode } from "@/components/pill-mode"
 import { useContent } from "@/components/language"
 
 export function ConfigShowcase() {
-  const { mode } = usePillMode()
+  // settledMode: a seção aparece/some depois da animação do hero, não durante
+  const { settledMode: mode } = usePillMode()
   const { configSnippets, ui } = useContent()
   const [active, setActive] = useState(configSnippets[0].id)
   const current = configSnippets.find((s) => s.id === active) ?? configSnippets[0]
