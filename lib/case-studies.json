@@ -1,0 +1,1782 @@
+{
+ "sentinel": {
+  "oneLiner": {
+   "pt": "Firewall de bots que escrevi em Cloudflare Workers: cada requisição recebe uma pontuação de 0 a 100 com sinais do plano gratuito, e o rate limit por IP encolhe conforme a suspeita aumenta.",
+   "en": "A bot firewall I wrote on Cloudflare Workers: every request gets a 0 to 100 score from Free-plan signals, and the per-IP rate limit shrinks as suspicion rises."
+  },
+  "architecture": {
+   "nodes": [
+    {
+     "id": "client",
+     "label": {
+      "pt": "Cliente HTTP",
+      "en": "HTTP client"
+     },
+     "sub": {
+      "pt": "navegador, curl ou scanner",
+      "en": "browser, curl or scanner"
+     },
+     "col": 0,
+     "row": 0
+    },
+    {
+     "id": "worker",
+     "label": {
+      "pt": "Worker (index.js)",
+      "en": "Worker (index.js)"
+     },
+     "sub": {
+      "pt": "rotas /, /api/stats e /api/check",
+      "en": "routes /, /api/stats and /api/check"
+     },
+     "col": 1,
+     "row": 0
+    },
+    {
+     "id": "score",
+     "label": {
+      "pt": "score.js",
+      "en": "score.js"
+     },
+     "sub": {
+      "pt": "heurísticas puras, pontuação 0 a 100",
+      "en": "pure heuristics, 0 to 100 score"
+     },
+     "col": 2,
+     "row": 0
+    },
+    {
+     "id": "ratelimiter",
+     "label": {
+      "pt": "RateLimiter DO",
+      "en": "RateLimiter DO"
+     },
+     "sub": {
+      "pt": "um Durable Object por IP, janela deslizante adaptativa",
+      "en": "one Durable Object per IP, adaptive sliding window"
+     },
+     "col": 2,
+     "row": 1
+    },
+    {
+     "id": "verdict",
+     "label": {
+      "pt": "Veredito",
+      "en": "Verdict"
+     },
+     "sub": {
+      "pt": "ALLOW 200, CHALLENGE/BLOCK 403, RATE_LIMITED 429",
+      "en": "ALLOW 200, CHALLENGE/BLOCK 403, RATE_LIMITED 429"
+     },
+     "col": 3,
+     "row": 0
+    },
+    {
+     "id": "stats",
+     "label": {
+      "pt": "Stats DO",
+      "en": "Stats DO"
+     },
+     "sub": {
+      "pt": "contadores globais e últimos 40 eventos para o dashboard",
+      "en": "global counters and last 40 events for the dashboard"
+     },
+     "col": 3,
+     "row": 1
+    },
+    {
+     "id": "logs",
+     "label": {
+      "pt": "logger.js",
+      "en": "logger.js"
+     },
+     "sub": {
+      "pt": "uma linha JSON por decisão, IP truncado",
+      "en": "one JSON line per decision, truncated IP"
+     },
+     "col": 3,
+     "row": 2
+    }
+   ],
+   "edges": [
+    {
+     "from": "client",
+     "to": "worker",
+     "label": {
+      "pt": "requisição",
+      "en": "request"
+     }
+    },
+    {
+     "from": "worker",
+     "to": "score",
+     "label": {
+      "pt": "headers e request.cf",
+      "en": "headers and request.cf"
+     }
+    },
+    {
+     "from": "worker",
+     "to": "ratelimiter",
+     "label": {
+      "pt": "score e parâmetros de config",
+      "en": "score and config parameters"
+     }
+    },
+    {
+     "from": "score",
+     "to": "verdict",
+     "label": {
+      "pt": "score vs limiares",
+      "en": "score vs thresholds"
+     }
+    },
+    {
+     "from": "ratelimiter",
+     "to": "verdict",
+     "label": {
+      "pt": "limited, count, limit",
+      "en": "limited, count, limit"
+     }
+    },
+    {
+     "from": "worker",
+     "to": "stats",
+     "label": {
+      "pt": "ctx.waitUntil, fora do caminho da resposta",
+      "en": "ctx.waitUntil, off the response path"
+     }
+    },
+    {
+     "from": "worker",
+     "to": "logs",
+     "label": {
+      "pt": "logDecision",
+      "en": "logDecision"
+     }
+    }
+   ]
+  },
+  "decisions": [
+   {
+    "title": {
+     "pt": "Só sinais do plano gratuito, sem Bot Management pago",
+     "en": "Only Free-plan signals, no paid Bot Management"
+    },
+    "why": {
+     "pt": "Não usei request.cf.botManagement. Tudo vem de headers, metadados de TLS/HTTP e da rede de origem (ASN e threatScore). A ideia era que as heurísticas fossem o produto, não um recurso pago da Cloudflare.",
+     "en": "I did not use request.cf.botManagement. Everything comes from headers, TLS/HTTP metadata and the source network (ASN and threatScore). The point was for the heuristics to be the product, not a paid Cloudflare feature."
+    },
+    "tradeoff": null
+   },
+   {
+    "title": {
+     "pt": "Rate limit que se adapta à pontuação",
+     "en": "Rate limit adapted to the score"
+    },
+    "why": {
+     "pt": "O orçamento por IP é baseLimit x (1 - min(0,85, score/100)), com piso de 3 requisições. Assim o abuso fica caro sem punir usuários reais: um navegador limpo recebe a janela inteira e o cliente mais suspeito cai para 15% dela.",
+     "en": "The per-IP budget is baseLimit x (1 - min(0.85, score/100)), with a floor of 3 requests. That makes abuse expensive without punishing real users: a clean browser gets the full window and the most suspicious client drops to 15% of it."
+    },
+    "tradeoff": null
+   },
+   {
+    "title": {
+     "pt": "Rate limiter que falha aberto",
+     "en": "Rate limiter fails open"
+    },
+    "why": {
+     "pt": "Uma falha no Durable Object ou no storage não pode negar acesso a um usuário real. Por isso o erro é registrado com IP truncado e a requisição segue como não limitada.",
+     "en": "A Durable Object or storage failure must not deny a real user. So the error is logged with a truncated IP and the request proceeds as not limited."
+    },
+    "tradeoff": {
+     "pt": "Enquanto a falha durar, nenhum limite é aplicado. A resposta interna sai marcada com degraded: true.",
+     "en": "While the failure lasts, no limit is enforced. The internal response is marked degraded: true."
+    }
+   },
+   {
+    "title": {
+     "pt": "Estatísticas fora do caminho quente",
+     "en": "Stats kept off the hot path"
+    },
+    "why": {
+     "pt": "O registro no Stats DO roda em ctx.waitUntil, com catch próprio, para nunca adicionar latência nem quebrar o veredito devolvido ao cliente. Pontuação e veredito são o fluxo principal; stats e logs ficam secundários e isolados.",
+     "en": "Recording to the Stats DO runs in ctx.waitUntil with its own catch, so it never adds latency to or breaks the verdict sent back to the client. Scoring and verdict are the main flow; stats and logs stay secondary and isolated."
+    },
+    "tradeoff": null
+   },
+   {
+    "title": {
+     "pt": "IP truncado antes de logar ou armazenar",
+     "en": "IP truncated before logging or storage"
+    },
+    "why": {
+     "pt": "Escrevi coarsenIp para remover o último octeto IPv4 ou o último grupo IPv6, de modo que o IP completo nunca seja logado nem guardado no Stats DO. O objetivo é a conformidade com a GDPR.",
+     "en": "I wrote coarsenIp to drop the last IPv4 octet or final IPv6 group, so the full IP is never logged or kept in the Stats DO. The goal is GDPR compliance."
+    },
+    "tradeoff": null
+   }
+  ],
+  "numbers": [
+   {
+    "label": {
+     "pt": "Limiar de CHALLENGE",
+     "en": "CHALLENGE threshold"
+    },
+    "value": "30",
+    "source": "src/config.js, wrangler.toml"
+   },
+   {
+    "label": {
+     "pt": "Limiar de BLOCK",
+     "en": "BLOCK threshold"
+    },
+    "value": "60",
+    "source": "src/config.js, wrangler.toml"
+   },
+   {
+    "label": {
+     "pt": "Janela do rate limit",
+     "en": "Rate limit window"
+    },
+    "value": "10000 ms",
+    "source": "src/config.js, wrangler.toml"
+   },
+   {
+    "label": {
+     "pt": "Limite base por janela",
+     "en": "Base limit per window"
+    },
+    "value": "20 requisições / 20 requests",
+    "source": "src/config.js, wrangler.toml"
+   },
+   {
+    "label": {
+     "pt": "Redução máxima do orçamento",
+     "en": "Maximum budget reduction"
+    },
+    "value": "0,85 (até 15% do limite) / 0.85 (down to 15% of the limit)",
+    "source": "wrangler.toml"
+   },
+   {
+    "label": {
+     "pt": "Piso do limite",
+     "en": "Limit floor"
+    },
+    "value": "3 requisições / 3 requests",
+    "source": "src/config.js, src/ratelimiter.js"
+   },
+   {
+    "label": {
+     "pt": "Peso: User-Agent de automação conhecida",
+     "en": "Weight: known automation User-Agent"
+    },
+    "value": "65",
+    "source": "src/config.js, src/score.js"
+   },
+   {
+    "label": {
+     "pt": "Peso: sem User-Agent",
+     "en": "Weight: no User-Agent"
+    },
+    "value": "50",
+    "source": "src/config.js, src/score.js"
+   },
+   {
+    "label": {
+     "pt": "Versão do Chrome a partir da qual Client Hints são exigidos",
+     "en": "Chrome version from which Client Hints are expected"
+    },
+    "value": "90",
+    "source": "src/config.js, src/score.js"
+   },
+   {
+    "label": {
+     "pt": "Eventos recentes guardados no Stats DO",
+     "en": "Recent events kept in the Stats DO"
+    },
+    "value": "40",
+    "source": "src/config.js, src/stats.js"
+   },
+   {
+    "label": {
+     "pt": "Tamanho máximo do User-Agent guardado",
+     "en": "Max stored User-Agent length"
+    },
+    "value": "80 caracteres / 80 characters",
+    "source": "src/config.js, src/index.js"
+   },
+   {
+    "label": {
+     "pt": "Parâmetros configuráveis por variável de ambiente",
+     "en": "Parameters configurable via environment variable"
+    },
+    "value": "24",
+    "source": "src/config.js"
+   },
+   {
+    "label": {
+     "pt": "Testes unitários (Vitest)",
+     "en": "Unit tests (Vitest)"
+    },
+    "value": "90 passando / 90 passing",
+    "source": "tests/*.test.js, README.md (confirmado com vitest run / confirmed with vitest run)"
+   },
+   {
+    "label": {
+     "pt": "Cobertura de linhas de score.js, ratelimiter.js, config.js e logger.js",
+     "en": "Line coverage of score.js, ratelimiter.js, config.js and logger.js"
+    },
+    "value": "100%",
+    "source": "vitest.config.js (vitest run --coverage)"
+   }
+  ],
+  "sources": [
+   "sentinel/README.md",
+   "sentinel/wrangler.toml",
+   "sentinel/package.json",
+   "sentinel/vitest.config.js",
+   "sentinel/.github/workflows/ci.yml",
+   "sentinel/src/index.js",
+   "sentinel/src/score.js",
+   "sentinel/src/ratelimiter.js",
+   "sentinel/src/stats.js",
+   "sentinel/src/config.js",
+   "sentinel/src/logger.js",
+   "sentinel/tests/*.test.js"
+  ]
+ },
+ "aegis": {
+  "oneLiner": {
+   "pt": "Proxy reverso em Rust (tokio, axum, hyper) que escrevi para aplicar rate limit por IP com token bucket, responder 429 aos clientes abusivos e encaminhar o resto ao backend.",
+   "en": "A Rust reverse proxy (tokio, axum, hyper) I wrote to rate-limit per client IP with a token bucket, answer abusive clients with 429 and forward the rest to the backend."
+  },
+  "architecture": {
+   "nodes": [
+    {
+     "id": "client",
+     "label": {
+      "pt": "Cliente",
+      "en": "Client"
+     },
+     "sub": {
+      "pt": "HTTP/1.1, ou HTTP/2 via TLS/ALPN",
+      "en": "HTTP/1.1, or HTTP/2 via TLS/ALPN"
+     },
+     "col": 0,
+     "row": 0
+    },
+    {
+     "id": "prom",
+     "label": {
+      "pt": "Prometheus",
+      "en": "Prometheus"
+     },
+     "sub": {
+      "pt": "scrape de /metrics",
+      "en": "scrapes /metrics"
+     },
+     "col": 0,
+     "row": 1
+    },
+    {
+     "id": "server",
+     "label": {
+      "pt": "server.rs",
+      "en": "server.rs"
+     },
+     "sub": {
+      "pt": "loop próprio: timeout de leitura de headers, TLS opcional, upgrades",
+      "en": "hand-rolled loop: header-read timeout, optional TLS, upgrades"
+     },
+     "col": 1,
+     "row": 0
+    },
+    {
+     "id": "admin",
+     "label": {
+      "pt": "Plano admin :9000",
+      "en": "Admin plane :9000"
+     },
+     "sub": {
+      "pt": "/healthz e /metrics, nunca limitado",
+      "en": "/healthz and /metrics, never rate limited"
+     },
+     "col": 1,
+     "row": 1
+    },
+    {
+     "id": "limiter",
+     "label": {
+      "pt": "limiter.rs",
+      "en": "limiter.rs"
+     },
+     "sub": {
+      "pt": "token bucket por IP em DashMap, regras por rota, 429",
+      "en": "per-IP token bucket in DashMap, per-route rules, 429"
+     },
+     "col": 2,
+     "row": 0
+    },
+    {
+     "id": "state",
+     "label": {
+      "pt": "state.rs",
+      "en": "state.rs"
+     },
+     "sub": {
+      "pt": "config quente em ArcSwap (SIGHUP) e contadores",
+      "en": "hot config in ArcSwap (SIGHUP) and counters"
+     },
+     "col": 2,
+     "row": 1
+    },
+    {
+     "id": "proxy",
+     "label": {
+      "pt": "proxy.rs",
+      "en": "proxy.rs"
+     },
+     "sub": {
+      "pt": "remove headers hop-by-hop, X-Forwarded-*, WebSocket",
+      "en": "strips hop-by-hop headers, X-Forwarded-*, WebSocket"
+     },
+     "col": 3,
+     "row": 0
+    },
+    {
+     "id": "backend",
+     "label": {
+      "pt": "Backend",
+      "en": "Backend"
+     },
+     "sub": {
+      "pt": "sempre HTTP/1.1; timeouts 504 e 408",
+      "en": "always HTTP/1.1; 504 and 408 timeouts"
+     },
+     "col": 3,
+     "row": 1
+    }
+   ],
+   "edges": [
+    {
+     "from": "client",
+     "to": "server",
+     "label": {
+      "pt": "porta :8080",
+      "en": "port :8080"
+     }
+    },
+    {
+     "from": "server",
+     "to": "limiter",
+     "label": {
+      "pt": "requisição com ConnectInfo",
+      "en": "request with ConnectInfo"
+     }
+    },
+    {
+     "from": "limiter",
+     "to": "proxy",
+     "label": {
+      "pt": "dentro do orçamento",
+      "en": "within budget"
+     }
+    },
+    {
+     "from": "proxy",
+     "to": "backend",
+     "label": {
+      "pt": "HTTP/1.1 com streaming",
+      "en": "streamed HTTP/1.1"
+     }
+    },
+    {
+     "from": "state",
+     "to": "limiter",
+     "label": {
+      "pt": "limites e regras atuais",
+      "en": "current limits and rules"
+     }
+    },
+    {
+     "from": "state",
+     "to": "proxy",
+     "label": {
+      "pt": "URL do backend e timeouts",
+      "en": "backend URL and timeouts"
+     }
+    },
+    {
+     "from": "prom",
+     "to": "admin",
+     "label": {
+      "pt": "GET /metrics",
+      "en": "GET /metrics"
+     }
+    },
+    {
+     "from": "admin",
+     "to": "state",
+     "label": {
+      "pt": "lê contadores",
+      "en": "reads counters"
+     }
+    }
+   ]
+  },
+  "decisions": [
+   {
+    "title": {
+     "pt": "Buckets em DashMap particionado, com refill preguiçoso e teto",
+     "en": "Buckets in a sharded DashMap, with lazy refill and a cap"
+    },
+    "why": {
+     "pt": "Coloquei os buckets num DashMap particionado e os reabasteço no acesso, então IPs distintos raramente disputam o mesmo lock. Um sweeper de buckets ociosos e o teto AEGIS_MAX_BUCKETS limitam a memória sob floods de IPs forjados.",
+     "en": "I keep the buckets in a sharded DashMap and refill them on access, so distinct IPs rarely contend for the same lock. An idle-bucket sweeper and the AEGIS_MAX_BUCKETS cap bound memory under spoofed-IP floods."
+    },
+    "tradeoff": null
+   },
+   {
+    "title": {
+     "pt": "Recarga por SIGHUP via ArcSwap",
+     "en": "SIGHUP reload via ArcSwap"
+    },
+    "why": {
+     "pt": "Troco o estado recarregável inteiro num ArcSwap. Assim um SIGHUP recarrega backend, limites, regras por rota, teto de corpo e timeouts sem derrubar conexões.",
+     "en": "I swap the reloadable state wholesale in an ArcSwap. A SIGHUP then reloads the backend, limits, route rules, body cap and timeouts without dropping connections."
+    },
+    "tradeoff": {
+     "pt": "Endereços de escuta e material TLS ficam fixos durante a vida do processo, porque os sockets já estão abertos.",
+     "en": "Listen addresses and TLS material stay fixed for the process lifetime, because the sockets are already bound."
+    }
+   },
+   {
+    "title": {
+     "pt": "TLS opcional, atrás de uma feature do Cargo",
+     "en": "TLS opt-in, behind a Cargo feature"
+    },
+    "why": {
+     "pt": "Deixei o TLS atrás de uma feature para manter o build padrão pequeno e totalmente estático, sem dependências de C ou de criptografia.",
+     "en": "I put TLS behind a feature to keep the default build small and fully static, with no C or crypto build dependencies."
+    },
+    "tradeoff": {
+     "pt": "Terminação TLS e backends https:// só existem com --features tls, e o plano admin continua em texto puro.",
+     "en": "TLS termination and https:// backends only exist with --features tls, and the admin plane stays plaintext."
+    }
+   },
+   {
+    "title": {
+     "pt": "Salto para o backend sempre em HTTP/1.1",
+     "en": "Upstream hop always HTTP/1.1"
+    },
+    "why": {
+     "pt": "O cliente pode falar HTTP/2 via TLS, mas o cliente de upstream em pool fala HTTP/1.1. Fixei a versão para desacoplar os dois saltos, o que corrigiu um erro 502 UserUnsupportedVersion.",
+     "en": "The client may speak HTTP/2 over TLS, but the pooled upstream client speaks HTTP/1.1. I pinned the version to decouple the two hops, which fixed a 502 UserUnsupportedVersion error."
+    },
+    "tradeoff": {
+     "pt": "O backend nunca recebe HTTP/2, mesmo quando o cliente usa HTTP/2.",
+     "en": "The backend never receives HTTP/2, even when the client uses it."
+    }
+   },
+   {
+    "title": {
+     "pt": "panic = \"abort\" no perfil de release",
+     "en": "panic = \"abort\" in the release profile"
+    },
+    "why": {
+     "pt": "Sem tabelas de unwinding, o binário fica menor. No mesmo perfil uso LTO fat, codegen-units = 1 e strip.",
+     "en": "Without unwinding tables the binary is smaller. The same profile uses fat LTO, codegen-units = 1 and strip."
+    },
+    "tradeoff": {
+     "pt": "Um handler que entra em pânico derruba o processo inteiro em vez de ser isolado por requisição.",
+     "en": "A panicking handler aborts the whole process instead of being isolated per request."
+    }
+   }
+  ],
+  "numbers": [
+   {
+    "label": {
+     "pt": "Taxa sustentada padrão por cliente",
+     "en": "Default sustained rate per client"
+    },
+    "value": "100 req/s",
+    "source": "README.md, .env.example"
+   },
+   {
+    "label": {
+     "pt": "Burst padrão por cliente",
+     "en": "Default burst per client"
+    },
+    "value": "200",
+    "source": "README.md, .env.example"
+   },
+   {
+    "label": {
+     "pt": "Teto de buckets rastreados",
+     "en": "Cap on tracked buckets"
+    },
+    "value": "1.000.000 / 1,000,000",
+    "source": "README.md, .env.example"
+   },
+   {
+    "label": {
+     "pt": "TTL de bucket ocioso",
+     "en": "Idle bucket TTL"
+    },
+    "value": "300 s",
+    "source": "README.md, .env.example"
+   },
+   {
+    "label": {
+     "pt": "Intervalo do sweeper",
+     "en": "Sweeper interval"
+    },
+    "value": "60 s",
+    "source": "README.md, .env.example"
+   },
+   {
+    "label": {
+     "pt": "Agrupamento IPv6",
+     "en": "IPv6 grouping"
+    },
+    "value": "/64",
+    "source": "README.md, src/limiter.rs"
+   },
+   {
+    "label": {
+     "pt": "Timeout de conexão ao upstream",
+     "en": "Upstream connect timeout"
+    },
+    "value": "5 s",
+    "source": "README.md, .env.example"
+   },
+   {
+    "label": {
+     "pt": "Timeout de requisição ao upstream (504)",
+     "en": "Upstream request timeout (504)"
+    },
+    "value": "30 s",
+    "source": "README.md, .env.example"
+   },
+   {
+    "label": {
+     "pt": "Timeout total da requisição (408)",
+     "en": "Total request backstop (408)"
+    },
+    "value": "60 s",
+    "source": "README.md, .env.example"
+   },
+   {
+    "label": {
+     "pt": "Prazo de leitura de headers HTTP/1 (slowloris)",
+     "en": "HTTP/1 header-read deadline (slowloris)"
+    },
+    "value": "10 s",
+    "source": "README.md, .env.example"
+   },
+   {
+    "label": {
+     "pt": "Content-Length máximo (413)",
+     "en": "Max Content-Length (413)"
+    },
+    "value": "10485760 bytes (10 MiB)",
+    "source": "README.md, .env.example"
+   },
+   {
+    "label": {
+     "pt": "Prazo de drenagem no desligamento",
+     "en": "Shutdown drain deadline"
+    },
+    "value": "30 s",
+    "source": "README.md, .env.example"
+   },
+   {
+    "label": {
+     "pt": "Portas proxy / admin",
+     "en": "Proxy / admin ports"
+    },
+    "value": "8080 / 9000",
+    "source": "README.md, Dockerfile"
+   },
+   {
+    "label": {
+     "pt": "Usuário da imagem Docker",
+     "en": "Docker image user"
+    },
+    "value": "65534:65534 (nobody), FROM scratch",
+    "source": "Dockerfile"
+   },
+   {
+    "label": {
+     "pt": "Funções de teste",
+     "en": "Test functions"
+    },
+    "value": "15 (13 unitárias, 2 de integração) / 15 (13 unit, 2 integration)",
+    "source": "src/limiter.rs, src/proxy.rs, tests/rate_limit.rs"
+   },
+   {
+    "label": {
+     "pt": "Jobs de CI",
+     "en": "CI jobs"
+    },
+    "value": "3 (check, cargo-audit, imagem Docker) / 3 (check, cargo-audit, Docker image)",
+    "source": ".github/workflows/ci.yml"
+   }
+  ],
+  "sources": [
+   "aegis-proxy/README.md",
+   "aegis-proxy/CHANGELOG.md",
+   "aegis-proxy/project-spec.md",
+   "aegis-proxy/Cargo.toml",
+   "aegis-proxy/Dockerfile",
+   "aegis-proxy/.env.example",
+   "aegis-proxy/.github/workflows/ci.yml",
+   "aegis-proxy/src/limiter.rs",
+   "aegis-proxy/src/proxy.rs",
+   "aegis-proxy/src/server.rs",
+   "aegis-proxy/src/state.rs",
+   "aegis-proxy/tests/rate_limit.rs"
+  ]
+ },
+ "realscan": {
+  "oneLiner": {
+   "pt": "Scanner de postura web em Cloudflare Workers: recebe um domínio e devolve um relatório com nota de A a F sobre HTTPS, headers de segurança, DNS de e-mail, subdomínios que podem expor a origem e segredos no código entregue ao navegador.",
+   "en": "A web-posture scanner on Cloudflare Workers: it takes a domain and returns an A to F graded report on HTTPS, security headers, email DNS, subdomains that may expose the origin, and secrets in browser-delivered code."
+  },
+  "architecture": {
+   "nodes": [
+    {
+     "id": "client",
+     "label": {
+      "pt": "Cliente",
+      "en": "Client"
+     },
+     "sub": {
+      "pt": "formulário ou embed do portfólio",
+      "en": "form or portfolio embed"
+     },
+     "col": 0,
+     "row": 0
+    },
+    {
+     "id": "worker",
+     "label": {
+      "pt": "Worker (index.js)",
+      "en": "Worker (index.js)"
+     },
+     "sub": {
+      "pt": "POST /api/scan, /r/:id, /api/stats",
+      "en": "POST /api/scan, /r/:id, /api/stats"
+     },
+     "col": 1,
+     "row": 0
+    },
+    {
+     "id": "limiter",
+     "label": {
+      "pt": "ScanLimiter DO",
+      "en": "ScanLimiter DO"
+     },
+     "sub": {
+      "pt": "20 scans por 10 min por IP",
+      "en": "20 scans per 10 min per IP"
+     },
+     "col": 1,
+     "row": 1
+    },
+    {
+     "id": "ssrf",
+     "label": {
+      "pt": "ssrf.js",
+      "en": "ssrf.js"
+     },
+     "sub": {
+      "pt": "só http/https, portas padrão, sem IP literal",
+      "en": "http/https only, default ports, no IP literals"
+     },
+     "col": 2,
+     "row": 0
+    },
+    {
+     "id": "doh",
+     "label": {
+      "pt": "DoH 1.1.1.1",
+      "en": "DoH 1.1.1.1"
+     },
+     "sub": {
+      "pt": "A/AAAA, TXT, DNSSEC, CAA",
+      "en": "A/AAAA, TXT, DNSSEC, CAA"
+     },
+     "col": 2,
+     "row": 1
+    },
+    {
+     "id": "scan",
+     "label": {
+      "pt": "scan.js",
+      "en": "scan.js"
+     },
+     "sub": {
+      "pt": "checagens isoladas, fetch com timeout e limite de bytes",
+      "en": "isolated checks, fetches with timeout and byte cap"
+     },
+     "col": 3,
+     "row": 0
+    },
+    {
+     "id": "target",
+     "label": {
+      "pt": "Site analisado",
+      "en": "Scanned site"
+     },
+     "sub": {
+      "pt": "HTML e até 6 scripts first-party",
+      "en": "HTML and up to 6 first-party scripts"
+     },
+     "col": 3,
+     "row": 1
+    },
+    {
+     "id": "reports",
+     "label": {
+      "pt": "Reports DO",
+      "en": "Reports DO"
+     },
+     "sub": {
+      "pt": "relatório por id curto, expira em 30 dias",
+      "en": "report by short id, expires in 30 days"
+     },
+     "col": 3,
+     "row": 2
+    }
+   ],
+   "edges": [
+    {
+     "from": "client",
+     "to": "worker",
+     "label": {
+      "pt": "POST { url }",
+      "en": "POST { url }"
+     }
+    },
+    {
+     "from": "worker",
+     "to": "limiter",
+     "label": {
+      "pt": "IP do cliente",
+      "en": "client IP"
+     }
+    },
+    {
+     "from": "worker",
+     "to": "ssrf",
+     "label": {
+      "pt": "URL após o limite",
+      "en": "URL after the limit"
+     }
+    },
+    {
+     "from": "ssrf",
+     "to": "doh",
+     "label": {
+      "pt": "resolve o host",
+      "en": "resolves the host"
+     }
+    },
+    {
+     "from": "ssrf",
+     "to": "scan",
+     "label": {
+      "pt": "host validado",
+      "en": "validated host"
+     }
+    },
+    {
+     "from": "scan",
+     "to": "target",
+     "label": {
+      "pt": "fetches limitados",
+      "en": "capped fetches"
+     }
+    },
+    {
+     "from": "scan",
+     "to": "doh",
+     "label": {
+      "pt": "SPF, DMARC, DNSSEC, CAA",
+      "en": "SPF, DMARC, DNSSEC, CAA"
+     }
+    },
+    {
+     "from": "worker",
+     "to": "reports",
+     "label": {
+      "pt": "waitUntil /save",
+      "en": "waitUntil /save"
+     }
+    }
+   ]
+  },
+  "decisions": [
+   {
+    "title": {
+     "pt": "Regra de honestidade: só o que um Worker consegue verificar",
+     "en": "Honesty rule: only what a Worker can verify"
+    },
+    "why": {
+     "pt": "Um Worker não consegue fazer um handshake TLS bruto contra um host arbitrário nem descobrir de verdade a origem atrás de uma CDN. Então fiz o RealScan não fingir que faz.",
+     "en": "A Worker cannot do a raw TLS handshake against an arbitrary host or truly discover an origin behind a CDN. So I made RealScan not pretend to."
+    },
+    "tradeoff": {
+     "pt": "Não há inspeção de certificado, e a detecção de subdomínios que expõem a origem é heurística e aparece rotulada como tal.",
+     "en": "There is no certificate inspection, and origin-bypass subdomain detection is heuristic and labelled as such."
+    }
+   },
+   {
+    "title": {
+     "pt": "Guarda anti-SSRF que resolve o host antes do scan",
+     "en": "SSRF guard that resolves the host before scanning"
+    },
+    "why": {
+     "pt": "Buscar URLs do usuário é um vetor de SSRF por padrão. O ssrf.js aceita só http/https nas portas 80/443, recusa IP literal e nomes internos, resolve A/AAAA e rejeita se algum endereço for privado ou reservado: RFC1918, loopback, link-local com 169.254.169.254, CGNAT, ULA, IPv4 mapeado em IPv6 e multicast.",
+     "en": "Fetching user-supplied URLs is an SSRF vector by default. ssrf.js accepts only http/https on ports 80/443, refuses IP literals and internal names, resolves A/AAAA and rejects the target if any address is private or reserved: RFC1918, loopback, link-local including 169.254.169.254, CGNAT, ULA, IPv4-mapped IPv6 and multicast."
+    },
+    "tradeoff": {
+     "pt": "Alvos por IP ou em portas fora do padrão não podem ser analisados.",
+     "en": "Targets given as an IP or on non-default ports cannot be scanned."
+    }
+   },
+   {
+    "title": {
+     "pt": "Rate limit antes de qualquer trabalho de saída",
+     "en": "Rate limit before any outbound work"
+    },
+    "why": {
+     "pt": "O scanner age em nome de quem chama, então o limite serve para impedir o uso do RealScan contra terceiros, não para UX. Roda antes do DoH e do scan; só uma checagem sintática vem antes, para um erro de digitação não ser mascarado pelo limite.",
+     "en": "The scanner acts on the caller's behalf, so the limit exists to stop RealScan hammering third parties, not for UX. It runs before DoH and the scan; only a syntactic check comes first, so a typo is not masked by the limiter."
+    },
+    "tradeoff": {
+     "pt": "Se o Durable Object do limite falhar, o scan segue sem limite (falha aberta).",
+     "en": "If the limiter Durable Object fails, the scan proceeds without a limit (fails open)."
+    }
+   },
+   {
+    "title": {
+     "pt": "Cada checagem isolada",
+     "en": "Every check isolated"
+    },
+    "why": {
+     "pt": "Uma sonda que falha vira \"não foi possível determinar\" em vez de quebrar o relatório. O HTML do relatório escapa tudo o que vem do site analisado.",
+     "en": "A failing probe degrades to \"could not determine\" instead of breaking the report. Report rendering HTML-escapes everything that came from the scanned site."
+    },
+    "tradeoff": null
+   },
+   {
+    "title": {
+     "pt": "Leituras com teto de bytes e de scripts",
+     "en": "Reads capped by bytes and script count"
+    },
+    "why": {
+     "pt": "Tratei esses valores como limites de memória e timeouts: o HTML é lido até 600000 bytes, cada script até 400000 bytes, e só os 6 primeiros scripts first-party são baixados para a busca de segredos. Segredos encontrados saem mascarados (4 primeiros e 4 últimos caracteres).",
+     "en": "I treat these values as memory bounds and timeouts: HTML is read up to 600000 bytes, each script up to 400000 bytes, and only the first 6 first-party scripts are fetched for the secret scan. Secrets found are masked (first 4 and last 4 characters)."
+    },
+    "tradeoff": {
+     "pt": "Conteúdo além do teto, scripts de terceiros e scripts a partir do sétimo não são examinados.",
+     "en": "Content past the cap, third-party scripts and scripts beyond the sixth are not examined."
+    }
+   }
+  ],
+  "numbers": [
+   {
+    "label": {
+     "pt": "Scans por IP por janela",
+     "en": "Scans per IP per window"
+    },
+    "value": "20 a cada 10 min (600000 ms) / 20 per 10 min (600000 ms)",
+    "source": "wrangler.toml, src/config.js"
+   },
+   {
+    "label": {
+     "pt": "Timeout de cada fetch",
+     "en": "Per-fetch timeout"
+    },
+    "value": "8000 ms",
+    "source": "wrangler.toml, src/config.js"
+   },
+   {
+    "label": {
+     "pt": "Timeout de DoH",
+     "en": "DoH timeout"
+    },
+    "value": "6000 ms",
+    "source": "wrangler.toml, src/config.js"
+   },
+   {
+    "label": {
+     "pt": "Teto de leitura do HTML",
+     "en": "HTML read cap"
+    },
+    "value": "600000 bytes",
+    "source": "wrangler.toml, src/config.js"
+   },
+   {
+    "label": {
+     "pt": "Teto de leitura por script",
+     "en": "Per-script read cap"
+    },
+    "value": "400000 bytes",
+    "source": "wrangler.toml, src/config.js"
+   },
+   {
+    "label": {
+     "pt": "Scripts first-party analisados",
+     "en": "First-party scripts scanned"
+    },
+    "value": "até 6 / up to 6",
+    "source": "wrangler.toml, src/scan.js"
+   },
+   {
+    "label": {
+     "pt": "Padrões de segredo",
+     "en": "Secret patterns"
+    },
+    "value": "7 (AWS, Google, Stripe secret e publishable, Slack, GitHub, chave privada) / 7 (AWS, Google, Stripe secret and publishable, Slack, GitHub, private key)",
+    "source": "src/scan.js"
+   },
+   {
+    "label": {
+     "pt": "Subdomínios testados para exposição de origem",
+     "en": "Subdomains probed for origin exposure"
+    },
+    "value": "8",
+    "source": "src/scan.js"
+   },
+   {
+    "label": {
+     "pt": "Custo por achado (alto / médio / baixo)",
+     "en": "Cost per finding (high / medium / low)"
+    },
+    "value": "20 / 10 / 4, a partir de 100 / from 100",
+    "source": "wrangler.toml, src/scan.js"
+   },
+   {
+    "label": {
+     "pt": "Notas",
+     "en": "Grades"
+    },
+    "value": "A >= 90, B >= 75, C >= 60, D >= 40, F abaixo / F below",
+    "source": "wrangler.toml, src/config.js"
+   },
+   {
+    "label": {
+     "pt": "Validade do relatório compartilhável",
+     "en": "Shareable report lifetime"
+    },
+    "value": "30 dias / 30 days",
+    "source": "src/reports.js"
+   },
+   {
+    "label": {
+     "pt": "Testes (Vitest)",
+     "en": "Tests (Vitest)"
+    },
+    "value": "32 passando / 32 passing",
+    "source": "tests/*.test.js (confirmado com vitest run / confirmed with vitest run)"
+   }
+  ],
+  "sources": [
+   "realscan/README.md",
+   "realscan/wrangler.toml",
+   "realscan/.github/workflows/ci.yml",
+   "realscan/src/index.js",
+   "realscan/src/ssrf.js",
+   "realscan/src/dns.js",
+   "realscan/src/scan.js",
+   "realscan/src/limiter.js",
+   "realscan/src/reports.js",
+   "realscan/src/config.js",
+   "realscan/tests/*.test.js"
+  ]
+ },
+ "tesstrade": {
+  "oneLiner": {
+   "pt": "Plataforma de trading algorítmico que junta rede social, ambiente de desenvolvimento quantitativo no navegador e engine de backtesting em Rust.",
+   "en": "An algorithmic trading platform that combines social features, an in-browser quantitative development environment and a Rust backtesting engine."
+  },
+  "architecture": {
+   "nodes": [
+    {
+     "id": "workspace",
+     "label": {
+      "pt": "Workspace do trader",
+      "en": "Trader workspace"
+     },
+     "sub": {
+      "pt": "React, Vite, Zustand",
+      "en": "React, Vite, Zustand"
+     },
+     "col": 0,
+     "row": 0
+    },
+    {
+     "id": "editor",
+     "label": {
+      "pt": "IDE e gráficos",
+      "en": "IDE and charts"
+     },
+     "sub": {
+      "pt": "Monaco, Three.js, D3",
+      "en": "Monaco, Three.js, D3"
+     },
+     "col": 0,
+     "row": 1
+    },
+    {
+     "id": "gateway",
+     "label": {
+      "pt": "API Gateway",
+      "en": "API Gateway"
+     },
+     "sub": {
+      "pt": "Traefik",
+      "en": "Traefik"
+     },
+     "col": 1,
+     "row": 0
+    },
+    {
+     "id": "clerk",
+     "label": {
+      "pt": "Clerk",
+      "en": "Clerk"
+     },
+     "sub": {
+      "pt": "autenticação e sessão",
+      "en": "authentication and sessions"
+     },
+     "col": 1,
+     "row": 1
+    },
+    {
+     "id": "api",
+     "label": {
+      "pt": "Core API",
+      "en": "Core API"
+     },
+     "sub": {
+      "pt": "Rust, Axum",
+      "en": "Rust, Axum"
+     },
+     "col": 2,
+     "row": 0
+    },
+    {
+     "id": "python",
+     "label": {
+      "pt": "Sandbox Python",
+      "en": "Python sandbox"
+     },
+     "sub": {
+      "pt": "indicadores escritos pelo usuário",
+      "en": "user-authored indicators"
+     },
+     "col": 3,
+     "row": 0
+    },
+    {
+     "id": "db",
+     "label": {
+      "pt": "TimescaleDB",
+      "en": "TimescaleDB"
+     },
+     "sub": {
+      "pt": "séries temporais em PostgreSQL",
+      "en": "PostgreSQL time series"
+     },
+     "col": 3,
+     "row": 1
+    },
+    {
+     "id": "redis",
+     "label": {
+      "pt": "Redis",
+      "en": "Redis"
+     },
+     "sub": {
+      "pt": "PubSub",
+      "en": "PubSub"
+     },
+     "col": 3,
+     "row": 2
+    }
+   ],
+   "edges": [
+    {
+     "from": "workspace",
+     "to": "editor",
+     "label": null
+    },
+    {
+     "from": "workspace",
+     "to": "gateway",
+     "label": {
+      "pt": "HTTPS / WSS",
+      "en": "HTTPS / WSS"
+     }
+    },
+    {
+     "from": "workspace",
+     "to": "clerk",
+     "label": {
+      "pt": "autenticação",
+      "en": "authentication"
+     }
+    },
+    {
+     "from": "gateway",
+     "to": "api",
+     "label": null
+    },
+    {
+     "from": "api",
+     "to": "python",
+     "label": {
+      "pt": "RPC",
+      "en": "RPC"
+     }
+    },
+    {
+     "from": "api",
+     "to": "db",
+     "label": {
+      "pt": "leitura e escrita",
+      "en": "reads and writes"
+     }
+    },
+    {
+     "from": "api",
+     "to": "redis",
+     "label": {
+      "pt": "computação",
+      "en": "compute"
+     }
+    }
+   ]
+  },
+  "decisions": [
+   {
+    "title": {
+     "pt": "Camada de execução migrada para Rust",
+     "en": "Execution layer migrated to Rust"
+    },
+    "why": {
+     "pt": "Simulações paralelas exigiam processar séries históricas em vários núcleos. Migrei para uma arquitetura multithread em Rust para evitar a limitação de thread única do Node.js e o GIL do Python.",
+     "en": "Parallel simulations required processing historical datasets across multiple cores. I moved to a multithreaded Rust architecture to avoid Node.js single-thread limits and the Python GIL."
+    },
+    "tradeoff": null
+   },
+   {
+    "title": {
+     "pt": "Indicadores em Python num sandbox, ligados à engine",
+     "en": "Python indicators in a sandbox, wired to the engine"
+    },
+    "why": {
+     "pt": "O usuário escreve o indicador no Monaco. O código vai para um worker Python isolado que valida a lógica e envia a saída para a engine Rust simular, via FFI/RPC.",
+     "en": "Users write indicators in Monaco. The code goes to an isolated Python worker that validates the logic and streams output to the Rust engine for simulation, via FFI/RPC."
+    },
+    "tradeoff": null
+   },
+   {
+    "title": {
+     "pt": "Zustand com componentes atômicos no workspace",
+     "en": "Zustand with atomic components in the workspace"
+    },
+    "why": {
+     "pt": "Usei Zustand com componentes atômicos para evitar re-renderizações em cascata do React enquanto chegam ticks em alta frequência, num layout em grade redimensionável com gráficos, editores e livro de ofertas.",
+     "en": "I used Zustand with atomic components to prevent cascading React re-renders while high-frequency ticks arrive, in a resizable grid of charts, editors and order books."
+    },
+    "tradeoff": null
+   }
+  ],
+  "numbers": [
+   {
+    "label": {
+     "pt": "Versão do React",
+     "en": "React version"
+    },
+    "value": "18",
+    "source": "README.md"
+   }
+  ],
+  "sources": [
+   "TessTrade/README.md"
+  ]
+ },
+ "6id": {
+  "oneLiner": {
+   "pt": "Ecossistema para gerenciar licenças, autenticar usuários e administrar plataformas de trading, com API central, console web e cliente desktop para Windows.",
+   "en": "An ecosystem to manage licenses, authenticate users and administer trading platforms, with a central API, a web console and a Windows desktop client."
+  },
+  "architecture": {
+   "nodes": [
+    {
+     "id": "web",
+     "label": {
+      "pt": "Console web",
+      "en": "Web console"
+     },
+     "sub": {
+      "pt": "Next.js 14 (App Router), React 18",
+      "en": "Next.js 14 (App Router), React 18"
+     },
+     "col": 0,
+     "row": 0
+    },
+    {
+     "id": "desktop",
+     "label": {
+      "pt": "Cliente desktop",
+      "en": "Desktop client"
+     },
+     "sub": {
+      "pt": "WPF, .NET 8, MVVM",
+      "en": "WPF, .NET 8, MVVM"
+     },
+     "col": 0,
+     "row": 1
+    },
+    {
+     "id": "gateway",
+     "label": {
+      "pt": "API Gateway",
+      "en": "API Gateway"
+     },
+     "sub": {
+      "pt": "load balancer",
+      "en": "load balancer"
+     },
+     "col": 1,
+     "row": 0
+    },
+    {
+     "id": "api",
+     "label": {
+      "pt": "Core API",
+      "en": "Core API"
+     },
+     "sub": {
+      "pt": "FastAPI, SQLAlchemy 2.0, Pydantic",
+      "en": "FastAPI, SQLAlchemy 2.0, Pydantic"
+     },
+     "col": 2,
+     "row": 0
+    },
+    {
+     "id": "db",
+     "label": {
+      "pt": "PostgreSQL",
+      "en": "PostgreSQL"
+     },
+     "sub": {
+      "pt": "Asyncpg, migrações Alembic",
+      "en": "Asyncpg, Alembic migrations"
+     },
+     "col": 3,
+     "row": 0
+    },
+    {
+     "id": "pdf",
+     "label": {
+      "pt": "Relatórios PDF",
+      "en": "PDF reports"
+     },
+     "sub": {
+      "pt": "ReportLab",
+      "en": "ReportLab"
+     },
+     "col": 3,
+     "row": 1
+    }
+   ],
+   "edges": [
+    {
+     "from": "web",
+     "to": "gateway",
+     "label": {
+      "pt": "HTTPS",
+      "en": "HTTPS"
+     }
+    },
+    {
+     "from": "desktop",
+     "to": "gateway",
+     "label": {
+      "pt": "HTTPS / REST",
+      "en": "HTTPS / REST"
+     }
+    },
+    {
+     "from": "gateway",
+     "to": "api",
+     "label": null
+    },
+    {
+     "from": "api",
+     "to": "db",
+     "label": {
+      "pt": "leitura e escrita assíncronas",
+      "en": "async reads and writes"
+     }
+    },
+    {
+     "from": "api",
+     "to": "pdf",
+     "label": {
+      "pt": "gera",
+      "en": "generates"
+     }
+    }
+   ]
+  },
+  "decisions": [
+   {
+    "title": {
+     "pt": "Camada de dados assíncrona",
+     "en": "Asynchronous data layer"
+    },
+    "why": {
+     "pt": "Usei FastAPI com Asyncpg e SQLAlchemy 2.0 para atender validações de licença concorrentes vindas dos clientes desktop sem bloquear threads durante I/O.",
+     "en": "I used FastAPI with Asyncpg and SQLAlchemy 2.0 to serve concurrent license validations from desktop clients without blocking threads during I/O."
+    },
+    "tradeoff": null
+   },
+   {
+    "title": {
+     "pt": "Cliente Windows compilado com flags de otimização do .NET 8",
+     "en": "Windows client built with .NET 8 optimization flags"
+    },
+    "why": {
+     "pt": "Compilei com PublishReadyToRun, TieredPGO e ServerGarbageCollection=false para gerar um executável autocontido, com menor tempo de inicialização a frio e menos memória que um app WPF padrão.",
+     "en": "I build with PublishReadyToRun, TieredPGO and ServerGarbageCollection=false to produce a self-contained executable with lower cold start time and less memory than a standard WPF app."
+    },
+    "tradeoff": null
+   },
+   {
+    "title": {
+     "pt": "Validação espelhada entre Pydantic e Zod",
+     "en": "Validation mirrored between Pydantic and Zod"
+    },
+    "why": {
+     "pt": "O backend valida os payloads com Pydantic e o console repete a validação no cliente com Zod e React Hook Form. Isso garante integridade antes do envio e barra requisições malformadas antes da API.",
+     "en": "The backend validates payloads with Pydantic and the console mirrors it client-side with Zod and React Hook Form. That ensures integrity before transmission and stops malformed requests before the API."
+    },
+    "tradeoff": null
+   }
+  ],
+  "numbers": [
+   {
+    "label": {
+     "pt": "Versão do .NET do cliente desktop",
+     "en": "Desktop client .NET version"
+    },
+    "value": ".NET 8",
+    "source": "README.md"
+   },
+   {
+    "label": {
+     "pt": "Versão do Next.js",
+     "en": "Next.js version"
+    },
+    "value": "14",
+    "source": "README.md"
+   },
+   {
+    "label": {
+     "pt": "Versão do SQLAlchemy",
+     "en": "SQLAlchemy version"
+    },
+    "value": "2.0",
+    "source": "README.md"
+   }
+  ],
+  "sources": [
+   "6ID/README.md"
+  ]
+ },
+ "dotfiles-bspwm": {
+  "oneLiner": {
+   "pt": "Meus dotfiles de um desktop bspwm no Arch Linux, com a estrutura espelhando o $HOME e um instalador em Bash que cria os symlinks com backup, dry-run opcional e suporte a GNU Stow.",
+   "en": "My dotfiles for a bspwm desktop on Arch Linux, laid out as a mirror of $HOME, with a Bash installer that creates the symlinks with backups, optional dry-run and GNU Stow support."
+  },
+  "architecture": {
+   "nodes": [
+    {
+     "id": "repo",
+     "label": {
+      "pt": "Repositório",
+      "en": "Repository"
+     },
+     "sub": {
+      "pt": "espelha o $HOME; listas pacman e AUR",
+      "en": "mirrors $HOME; pacman and AUR lists"
+     },
+     "col": 0,
+     "row": 0
+    },
+    {
+     "id": "setup",
+     "label": {
+      "pt": "setup.sh",
+      "en": "setup.sh"
+     },
+     "sub": {
+      "pt": "ln -sfn por item, --dry-run, --uninstall",
+      "en": "per-item ln -sfn, --dry-run, --uninstall"
+     },
+     "col": 1,
+     "row": 0
+    },
+    {
+     "id": "stow",
+     "label": {
+      "pt": "GNU Stow",
+      "en": "GNU Stow"
+     },
+     "sub": {
+      "pt": "--stow, com .stow-local-ignore",
+      "en": "--stow, with .stow-local-ignore"
+     },
+     "col": 1,
+     "row": 1
+    },
+    {
+     "id": "home",
+     "label": {
+      "pt": "$HOME",
+      "en": "$HOME"
+     },
+     "sub": {
+      "pt": "21 itens linkados",
+      "en": "21 linked items"
+     },
+     "col": 2,
+     "row": 0
+    },
+    {
+     "id": "backup",
+     "label": {
+      "pt": "Backup",
+      "en": "Backup"
+     },
+     "sub": {
+      "pt": "~/.dotfiles-backup-AAAAMMDD-HHMMSS",
+      "en": "~/.dotfiles-backup-YYYYMMDD-HHMMSS"
+     },
+     "col": 2,
+     "row": 1
+    },
+    {
+     "id": "bspwm",
+     "label": {
+      "pt": "Sessão bspwm",
+      "en": "bspwm session"
+     },
+     "sub": {
+      "pt": "bspwmrc sobe sxhkd, feh, picom, polybar, dunst, greenclip",
+      "en": "bspwmrc starts sxhkd, feh, picom, polybar, dunst, greenclip"
+     },
+     "col": 3,
+     "row": 0
+    },
+    {
+     "id": "apps",
+     "label": {
+      "pt": "Componentes",
+      "en": "Components"
+     },
+     "sub": {
+      "pt": "picom glx + dual_kawase, rofi, ghostty, zsh + starship",
+      "en": "picom glx + dual_kawase, rofi, ghostty, zsh + starship"
+     },
+     "col": 3,
+     "row": 1
+    }
+   ],
+   "edges": [
+    {
+     "from": "repo",
+     "to": "setup",
+     "label": null
+    },
+    {
+     "from": "repo",
+     "to": "stow",
+     "label": null
+    },
+    {
+     "from": "setup",
+     "to": "home",
+     "label": {
+      "pt": "symlinks",
+      "en": "symlinks"
+     }
+    },
+    {
+     "from": "setup",
+     "to": "backup",
+     "label": {
+      "pt": "conflitos movidos antes",
+      "en": "conflicts moved first"
+     }
+    },
+    {
+     "from": "stow",
+     "to": "home",
+     "label": {
+      "pt": "--restow",
+      "en": "--restow"
+     }
+    },
+    {
+     "from": "home",
+     "to": "bspwm",
+     "label": {
+      "pt": "login ou bspc wm -r",
+      "en": "login or bspc wm -r"
+     }
+    },
+    {
+     "from": "bspwm",
+     "to": "apps",
+     "label": {
+      "pt": "autostart",
+      "en": "autostart"
+     }
+    }
+   ]
+  },
+  "decisions": [
+   {
+    "title": {
+     "pt": "Falhas isoladas por item",
+     "en": "Per-item failure isolation"
+    },
+    "why": {
+     "pt": "O setup.sh roda com set -euo pipefail, mas chama cada link dentro de if !, para que uma falha seja registrada e o laço siga para o próximo item. No fim ele lista os itens que falharam e sai com erro.",
+     "en": "setup.sh runs under set -euo pipefail but calls each link inside if !, so a failure is recorded and the loop moves on. At the end it lists the failed items and exits non-zero."
+    },
+    "tradeoff": null
+   },
+   {
+    "title": {
+     "pt": "Backup em vez de sobrescrever",
+     "en": "Backup instead of overwrite"
+    },
+    "why": {
+     "pt": "Qualquer arquivo, diretório ou symlink alheio no destino é movido para um diretório de backup com timestamp antes do link, então dados do usuário nunca são sobrescritos no lugar. O --uninstall remove só os symlinks que apontam para o repositório e deixa os backups intactos.",
+     "en": "Any existing file, directory or foreign symlink at the target is moved to a timestamped backup directory before linking, so user data is never overwritten in place. --uninstall removes only symlinks pointing into the repo and leaves backups untouched."
+    },
+    "tradeoff": null
+   },
+   {
+    "title": {
+     "pt": "Idempotência com verificação do link",
+     "en": "Idempotency with link verification"
+    },
+    "why": {
+     "pt": "Itens que já apontam para o lugar certo são pulados. Depois de cada ln -sfn, o script confere com readlink -f se o link caiu no destino, para evitar surpresas de ln dentro de diretório.",
+     "en": "Items already pointing to the right place are skipped. After each ln -sfn the script checks with readlink -f that the link landed, to guard against ln-into-directory surprises."
+    },
+    "tradeoff": null
+   },
+   {
+    "title": {
+     "pt": "GNU Stow como caminho alternativo",
+     "en": "GNU Stow as an alternative path"
+    },
+    "why": {
+     "pt": "O --stow delega o link ao stow. O .stow-local-ignore mantém setup.sh, README e backups fora do $HOME, para que o resultado bata com a instalação normal.",
+     "en": "--stow hands linking to stow. .stow-local-ignore keeps setup.sh, README and backups out of $HOME, so the result matches the plain install."
+    },
+    "tradeoff": {
+     "pt": "No caminho do stow, conflitos são apenas reportados pelo próprio stow, sem o backup com timestamp.",
+     "en": "On the stow path, conflicts are only reported by stow itself, without the timestamped backup."
+    }
+   },
+   {
+    "title": {
+     "pt": "Segredos e histórico fora do git",
+     "en": "Secrets and history kept out of git"
+    },
+    "why": {
+     "pt": "O .gitignore exclui chaves (SSH, GPG, PEM), arquivos .env, configs de sops, stripe e atuin, e históricos de shell; o .gitconfig publicado usa nome e e-mail de exemplo. No .zshrc, ferramentas opcionais ficam atrás de command -v para o shell carregar mesmo sem elas.",
+     "en": ".gitignore excludes keys (SSH, GPG, PEM), .env files, sops, stripe and atuin configs, and shell history; the published .gitconfig uses placeholder name and email. In .zshrc, optional tools sit behind command -v so the shell loads even without them."
+    },
+    "tradeoff": null
+   }
+  ],
+  "numbers": [
+   {
+    "label": {
+     "pt": "Itens linkados pelo instalador",
+     "en": "Items linked by the installer"
+    },
+    "value": "21",
+    "source": "setup.sh"
+   },
+   {
+    "label": {
+     "pt": "Pacotes dos repositórios oficiais",
+     "en": "Official repo packages"
+    },
+    "value": "35",
+    "source": "packages/pacman.txt"
+   },
+   {
+    "label": {
+     "pt": "Pacotes do AUR",
+     "en": "AUR packages"
+    },
+    "value": "4",
+    "source": "packages/aur.txt"
+   },
+   {
+    "label": {
+     "pt": "Monitor configurado",
+     "en": "Configured display"
+    },
+    "value": "DP-2, 2560x1440 a 165 Hz / DP-2, 2560x1440 at 165 Hz",
+    "source": ".config/bspwm/bspwmrc, README.md"
+   },
+   {
+    "label": {
+     "pt": "Desktops do bspwm",
+     "en": "bspwm desktops"
+    },
+    "value": "10",
+    "source": ".config/bspwm/bspwmrc"
+   },
+   {
+    "label": {
+     "pt": "Backend e blur do picom",
+     "en": "picom backend and blur"
+    },
+    "value": "glx, dual_kawase, vsync",
+    "source": ".config/picom/picom.conf"
+   }
+  ],
+  "sources": [
+   "dotfiles-bspwm/README.md",
+   "dotfiles-bspwm/setup.sh",
+   "dotfiles-bspwm/.gitignore",
+   "dotfiles-bspwm/.stow-local-ignore",
+   "dotfiles-bspwm/packages/pacman.txt",
+   "dotfiles-bspwm/packages/aur.txt",
+   "dotfiles-bspwm/.config/bspwm/bspwmrc",
+   "dotfiles-bspwm/.config/picom/picom.conf",
+   "dotfiles-bspwm/.config/qt5ct/qt5ct.conf",
+   "dotfiles-bspwm/.zshrc"
+  ]
+ }
+}
