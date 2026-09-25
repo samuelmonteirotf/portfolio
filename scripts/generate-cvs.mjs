@@ -81,7 +81,7 @@ function render(d) {
 
 /* ---------------------------------- base ---------------------------------- */
 
-const LINKS = ["github.com/samuelmonteirotf", "linkedin.com/in/samuelmonteirotf", "monteirotf.com"]
+const LINKS = ["github.com/samuelmonteirotf", "linkedin.com/in/smonteiro-jr", "monteirotf.com"]
 
 const BASE = {
   pt: {

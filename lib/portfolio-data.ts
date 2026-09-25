@@ -154,7 +154,7 @@ export const profile = {
   location: l("Curitiba, Brasil", "Curitiba, Brazil"),
   email: "samuel@monteirotf.com",
   github: "https://github.com/samuelmonteirotf",
-  linkedin: "https://www.linkedin.com/in/samuel-monteiro-2534802a0/",
+  linkedin: "https://www.linkedin.com/in/smonteiro-jr/",
   available: true,
 }
 

@@ -70,7 +70,7 @@ const personJsonLd = {
   address: { '@type': 'PostalAddress', addressLocality: 'Curitiba', addressCountry: 'BR' },
   sameAs: [
     'https://github.com/samuelmonteirotf',
-    'https://www.linkedin.com/in/samuel-monteiro-2534802a0/',
+    'https://www.linkedin.com/in/smonteiro-jr/',
   ],
   knowsAbout: [
     'DevOps',
