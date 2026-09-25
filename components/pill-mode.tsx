@@ -16,7 +16,7 @@ type PillModeContextValue = { mode: ModeKey; settledMode: ModeKey; setMode: (mod
 
 const PillModeContext = createContext<PillModeContextValue | null>(null)
 const STORAGE_KEY = "pill-mode"
-const SETTLE_MS = 750 // > DISPERSE_MS (620ms) das partículas do hero
+const SETTLE_MS = 950 // > DISPERSE_MS (800ms) das partículas do hero
 
 export function PillModeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ModeKey>("all")

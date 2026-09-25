@@ -34,8 +34,9 @@ const S_BLUE: V3 = [1, 0, 0]
 const S_RED: V3 = [0, 1, 0]
 const S_PURPLE: V3 = [0, 0, 1]
 
-const DISPERSE_MS = 620 // SETTLE_MS do pill-mode depende disto
-const MERGE_MS = 1380
+const DISPERSE_MS = 800 // SETTLE_MS do pill-mode depende disto
+// no roxo: azul e vermelho se formam lado a lado e só então se fundem
+const MERGE_MS = 2900
 
 // tipos de formação (iguais no shader)
 const F_ORB = 0
@@ -412,7 +413,8 @@ void main() {
 
   // dispersão da troca de modo
   vec2 home = fract(aHome + vec2(uSeed, uSeed * 1.618)) * uRes;
-  float d = smoothstep(aRand.y * 0.45, aRand.y * 0.45 + 0.55, uDisp);
+  // atraso por partícula maior: a esfera se monta em ondas, não de uma vez
+  float d = smoothstep(aRand.y * 0.6, aRand.y * 0.6 + 0.4, uDisp);
   vec2 pos = mix(formed, home, d);
 
   vec2 dv = pos - uMouse.xy;
@@ -916,12 +918,16 @@ export function HeroOrb() {
         }
       }
       sinceChange += dt
-      disp += ((sinceChange < DISPERSE_MS ? 1 : 0) - disp) * (1 - Math.pow(1 - 0.12, f))
+      // espalhar é rápido; formar é lento, para ver a esfera se montando
+      // (com o atraso por partícula do shader, ela se forma em ondas, ~2s)
+      const dispersing = sinceChange < DISPERSE_MS
+      disp += ((dispersing ? 1 : 0) - disp) * (1 - Math.pow(1 - (dispersing ? 0.1 : 0.026), f))
       pulse *= Math.pow(0.93, f)
 
       const sy = window.scrollY
       const T = heroLayout(m, sinceChange)
-      const k = 1 - Math.pow(1 - 0.07, f)
+      // centro, cor e forma deslizam devagar: a fusão no roxo fica visível
+      const k = 1 - Math.pow(1 - 0.035, f)
       for (let g = 0; g < 2; g++) {
         gc[g][0] += (T.c[g][0] - gc[g][0]) * k
         gc[g][1] += (T.c[g][1] - sy - gc[g][1]) * k
