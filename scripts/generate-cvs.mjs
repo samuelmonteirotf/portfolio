@@ -225,7 +225,7 @@ const PROJECTS = {
     sentinel: {
       name: "Sentinel: Firewall de Bots na Edge",
       stack: "Cloudflare Workers / Durable Objects / JavaScript",
-      text: "Firewall de bots executado na edge com Cloudflare Workers e Durable Objects: cada requisição recebe uma pontuação por assinaturas de TLS, versão de HTTP e headers do navegador, e agentes suspeitos são bloqueados antes de chegar à origem, sem latência adicional e dentro do free tier.",
+      text: "Firewall de bots executado na edge com Cloudflare Workers e Durable Objects: cada requisição recebe uma pontuação por assinaturas de TLS, versão de HTTP e headers do navegador, rate limit adaptativo por cliente e veredito na própria edge (libera, desafia ou bloqueia), com registro fora do caminho da resposta e dentro do free tier.",
     },
     cortex: {
       name: "Cortex-Vault: Infraestrutura de Conhecimento",
@@ -257,7 +257,7 @@ const PROJECTS = {
     sentinel: {
       name: "Sentinel: Edge Bot Firewall",
       stack: "Cloudflare Workers / Durable Objects / JavaScript",
-      text: "Edge bot firewall running on Cloudflare Workers and Durable Objects: each request is scored by TLS, HTTP version, and browser header signatures, and suspicious agents are blocked before reaching the origin, with no added latency and within the free tier.",
+      text: "Edge bot firewall running on Cloudflare Workers and Durable Objects: each request is scored by TLS, HTTP version, and browser header signatures, a per-client adaptive rate limit, and a verdict right at the edge (allow, challenge, or block), with logging off the response path and within the free tier.",
     },
     cortex: {
       name: "Cortex-Vault: Knowledge Infrastructure",

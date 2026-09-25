@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, startTransition, useContext, useEffect, useState, type ReactNode } from "react"
-import type { ModeKey } from "@/lib/portfolio-data"
+import { modeColors, type ModeKey } from "@/lib/portfolio-data"
 
 /* Estado global do "modo" (pílula azul = full-stack · vermelha = devops).
  * Contexto client compartilhado entre hero, resumo e projetos. A escolha
@@ -30,11 +30,17 @@ export function PillModeProvider({ children }: { children: ReactNode }) {
     } catch {
       /* sem storage: segue no modo padrão */
     }
-    if (saved === "devops" || saved === "fullstack") {
+    if (saved === "devops" || saved === "fullstack" || saved === "all") {
       setModeState(saved)
       setSettledMode(saved) // na carga não há animação: os dois juntos
     }
   }, [])
+
+  // a cor do modo vive no :root (var --mode, animada via @property em
+  // globals.css): hero, seções, seleção de texto e barra de scroll herdam
+  useEffect(() => {
+    document.documentElement.style.setProperty("--mode", modeColors[mode])
+  }, [mode])
 
   useEffect(() => {
     if (settledMode === mode) return
@@ -70,9 +76,9 @@ export function usePillMode() {
  * pular quando uma seção some. Segue o settledMode: os números trocam
  * junto com as seções, não antes. */
 const SECTION_ORDER: { key: string; hiddenIn?: ModeKey[] }[] = [
+  { key: "projects" },
   { key: "infra-code", hiddenIn: ["fullstack"] },
   { key: "competencies" },
-  { key: "projects" },
   { key: "control-room", hiddenIn: ["fullstack"] },
   { key: "experience" },
   { key: "contact" },

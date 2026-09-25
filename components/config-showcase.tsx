@@ -20,6 +20,7 @@ export function ConfigShowcase() {
     <section
       id="infraestrutura"
       aria-labelledby="infra-code-heading"
+      data-scene="dust"
       className="border-t border-border py-14 md:py-16"
     >
       <RevealSection>
@@ -51,7 +52,7 @@ export function ConfigShowcase() {
                 onClick={() => setActive(snippet.id)}
                 className={`rounded-md px-3 py-1 font-mono text-xs transition-colors ${
                   active === snippet.id
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-mode text-background"
                     : "text-muted-foreground hover:bg-card hover:text-foreground"
                 }`}
               >
@@ -75,7 +76,7 @@ export function ConfigShowcase() {
           tabIndex={0}
           role="region"
           aria-label={current.filename}
-          className="overflow-x-auto p-4 text-sm leading-relaxed outline-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#e9eef5]"
+          className="overflow-x-auto p-4 text-sm leading-relaxed outline-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-mode"
         >
           <code className="font-mono text-foreground">{current.code}</code>
         </pre>

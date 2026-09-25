@@ -1,11 +1,12 @@
 "use client"
 
-import { BadgeCheck } from "lucide-react"
 import { SectionHeading } from "@/components/section-heading"
 import { RevealSection, RevealGroup, RevealItem } from "@/components/motion/reveal"
-import { TimelineItem } from "@/components/timeline-item"
 import { useContent, useLanguage } from "@/components/language"
 
+/* Trajetória: o texto aberto à esquerda (sem acordeão escondendo o que
+ * importa) e, no palco, a linha que se desenha com a rolagem e acende um nó
+ * por experiência (cena "timeline", data-p2 = quantidade). */
 export function ExperienceSection() {
   const { lang } = useLanguage()
   const { experiences, certifications, ui } = useContent()
@@ -13,61 +14,39 @@ export function ExperienceSection() {
     <section
       id="experience"
       aria-labelledby="experience-heading"
-      className="border-t border-border py-14 md:py-16"
+      data-scene="timeline"
+      data-p2={experiences.length}
+      className="border-t border-border py-20 md:py-28"
     >
-      <RevealSection>
-      <SectionHeading
-        section="experience"
-        title={ui.sections.experience.title}
-        description={ui.sections.experience.description}
-      />
+      <RevealSection className="lg:max-w-[34rem]">
+        <SectionHeading section="experience" title={ui.sections.experience.title} description={ui.sections.experience.description} />
 
-      <div className="grid gap-10 lg:grid-cols-[1.5fr_1fr]">
-        <RevealGroup key={`t-${lang}`} as="ol" className="relative self-start border-l border-border" stagger={0.09}>
-          {experiences.map((exp) => (
-            <RevealItem as="li" key={exp.company} className="relative ml-6 pb-8 last:pb-0">
+        <RevealGroup key={`t-${lang}`} as="ol" className="relative border-l border-border" stagger={0.09}>
+          {experiences.map((exp, i) => (
+            <RevealItem as="li" key={exp.company} className="relative ml-6 pb-10 last:pb-0">
               <span
-                className="absolute -left-[31px] top-2 h-3 w-3 rounded-full border-2 border-background bg-muted-foreground"
+                className={`absolute -left-[31px] top-2 h-3 w-3 rounded-full border-2 border-background ${i === 0 ? "bg-mode shadow-[0_0_10px_var(--mode)]" : "bg-muted-foreground"}`}
                 aria-hidden="true"
               />
-              <TimelineItem
-                role={exp.role}
-                period={exp.period}
-                company={exp.company}
-                description={exp.description}
-              />
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <h3 className="font-semibold text-foreground">{exp.role}</h3>
+                <span className="font-mono text-xs text-muted-foreground">{exp.period}</span>
+              </div>
+              <p className="mt-1 font-mono text-xs uppercase tracking-[0.14em] text-mode">{exp.company}</p>
+              <p className="mt-3 text-pretty text-[15px] leading-relaxed text-muted-foreground">{exp.description}</p>
             </RevealItem>
           ))}
         </RevealGroup>
 
-        <div>
-          <h3 className="mb-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            {ui.experienceSection.certifications}
-          </h3>
-          <RevealGroup key={`c-${lang}`} as="ul" className="flex flex-col gap-3" stagger={0.06}>
-            {certifications.map((cert) => (
-              <RevealItem
-                as="li"
-                key={cert.name}
-                className="flex items-start gap-3 rounded-lg border border-border bg-card p-4"
-              >
-                <BadgeCheck
-                  className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <div>
-                  <p className="text-sm font-medium leading-snug text-foreground">
-                    {cert.name}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {cert.issuer}
-                  </p>
-                </div>
-              </RevealItem>
-            ))}
-          </RevealGroup>
-        </div>
-      </div>
+        <h3 className="mb-4 mt-14 font-mono text-xs uppercase tracking-widest text-muted-foreground">{ui.experienceSection.certifications}</h3>
+        <ul className="divide-y divide-border border-y border-border">
+          {certifications.map((cert) => (
+            <li key={cert.name} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 py-3">
+              <span className="text-sm font-medium text-foreground">{cert.name}</span>
+              <span className="font-mono text-[11px] text-muted-foreground">{cert.issuer}</span>
+            </li>
+          ))}
+        </ul>
       </RevealSection>
     </section>
   )

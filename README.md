@@ -24,14 +24,14 @@ The application relies on Cloudflare Pages for global distribution. Next.js serv
 
 ### Prerequisites
 
-* Node.js 20 or higher
-* pnpm package manager
+* Node.js 22 (see .node-version)
+* npm (the lockfile is package-lock.json)
 
 ### Setup Instructions
 
 1. Clone the repository to your local machine.
-2. Install project dependencies using pnpm install.
-3. Start the local development server using pnpm run dev.
+2. Install project dependencies using npm ci.
+3. Start the local development server using npm run dev.
 4. Access the application on localhost port 3000.
 
 ## Cloud Environment Configuration

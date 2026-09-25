@@ -1,17 +1,19 @@
 "use client"
 
-import { HeroParticles } from "@/components/hero-particles"
-
-// Fundo do hero — campo de moléculas (Canvas 2D). Ao trocar de modo, as
-// partículas convergem e formam a esfera de plasma na cor certa.
+// Máscaras do hero. A esfera em si vive num canvas fixo atrás da página
+// inteira (ver HeroOrb em app/page.tsx): ela sai do hero e acompanha a leitura.
 export function HeroBackdrop() {
   return (
-    <div aria-hidden="true" className="absolute inset-0 overflow-hidden bg-background">
-      <HeroParticles />
-      {/* máscara topo/base: contraste do texto (topo e base), meio livre p/ a esfera viajar */}
+    <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
+      {/* estreito: esfera no meio, texto em cima e embaixo → máscara topo/base */}
       <div
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0 lg:hidden"
         style={{ background: "linear-gradient(to bottom, rgba(3,3,3,0.78) 0%, transparent 24%, transparent 62%, rgba(3,3,3,0.88) 100%)" }}
+      />
+      {/* largo: esfera à direita, texto à esquerda → máscara só do lado do texto */}
+      <div
+        className="pointer-events-none absolute inset-0 hidden lg:block"
+        style={{ background: "linear-gradient(to right, rgba(3,3,3,0.55) 0%, transparent 42%)" }}
       />
       {/* vinheta lateral bem sutil */}
       <div

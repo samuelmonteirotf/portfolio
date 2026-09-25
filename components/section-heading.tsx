@@ -17,7 +17,7 @@ export function SectionHeading({
   return (
     <div className="mb-8">
       <div className="flex items-baseline gap-3">
-        <span className="font-mono text-sm text-muted-foreground">{index ?? ""}</span>
+        <span className="font-mono text-sm text-mode">{index ?? ""}</span>
         {/* id casa com o aria-labelledby="<section>-heading" das seções */}
         <h2 id={`${section}-heading`} className="text-xl font-semibold tracking-tight text-foreground md:text-2xl">
           {title}

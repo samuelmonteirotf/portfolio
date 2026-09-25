@@ -56,6 +56,8 @@ export type Project<T = string> = {
   // fechado usam "Case técnico" para o clique não frustrar
   repoLabel?: T
   live?: string
+  // demo interativa embutida no card (components/demos)
+  demo?: "sentinel" | "aegis" | "backtest"
   tracks: ModeKey[]
 }
 
@@ -98,14 +100,17 @@ export type UiStrings<T = string> = {
     experience: { title: T; description: T }
     contact: { title: T; description: T }
   }
-  projectCard: { problem: T; approach: T; repo: T }
+  projectCard: { problem: T; approach: T; repo: T; caseStudy: T }
   controlRoom: {
     status: T
+    noTelemetry: T
+    live: T
     uptime: T
     legendAria: T
     nodes: Record<string, ControlRoomNode<T>>
   }
   experienceSection: { certifications: T }
+  contactSection: { lead: T; copy: T; copied: T }
   configShowcase: { tablistAria: T }
   footer: { rights: T }
 }
@@ -129,6 +134,10 @@ export type SiteContent = {
   certifications: Certification[]
   ui: UiStrings
 }
+
+/* Identificador curto e estável de projeto (igual nos dois idiomas): o nome
+ * antes do parêntese. Usado no id do card e nos comandos do terminal. */
+export const projectSlug = (title: string) => title.split(" (")[0].trim().toLowerCase()
 
 /* Cor única por modo — esfera, eyebrow, régua, token e toggle usam o mesmo hex.
  * Hex cheio sempre: em alpha reduzida o vermelho falha contraste AA no #030303. */
@@ -156,8 +165,8 @@ const modes: Record<ModeKey, Mode<L>> = {
   devops: {
     role: l("Engenheiro DevOps e Segurança na Edge", "DevOps & Edge Security Engineer"),
     tagline: l(
-      "Defendo sistemas na borda da rede. Meu firewall de bots roda em Cloudflare Workers e bloqueia tráfego malicioso antes de chegar à origem, sem latência extra e com custo zero.",
-      "I defend systems at the network edge. My bot firewall runs on Cloudflare Workers and blocks malicious traffic before it reaches the origin, with no extra latency and zero cost.",
+      "Defendo sistemas na borda da rede. Meu firewall de bots roda em Cloudflare Workers e decide na própria edge o que passa, o que é desafiado e o que é bloqueado, sem pagar por Bot Management.",
+      "I defend systems at the network edge. My bot firewall runs on Cloudflare Workers and decides right at the edge what passes, what gets challenged, and what gets blocked, without paying for Bot Management.",
     ),
     taglineParts: {
       before: l(
@@ -166,8 +175,8 @@ const modes: Record<ModeKey, Mode<L>> = {
       ),
       token: same("Cloudflare Workers"),
       after: l(
-        " e bloqueia tráfego malicioso antes de chegar à origem, sem latência extra e com custo zero.",
-        " and blocks malicious traffic before it reaches the origin, with no extra latency and zero cost.",
+        " e decide na própria edge o que passa, o que é desafiado e o que é bloqueado, sem pagar por Bot Management.",
+        " and decides right at the edge what passes, what gets challenged, and what gets blocked, without paying for Bot Management.",
       ),
       voice: "sans",
     },
@@ -469,8 +478,8 @@ export default {
   async fetch(req, env, ctx) {
     const score = threatScore(req)
 
-    if (score >= 80) return new Response("Forbidden", { status: 403 }) // bloqueia
-    if (score >= 60) return managedChallenge(req)                      // desafia
+    if (score >= 60) return new Response("Forbidden", { status: 403 }) // bloqueia
+    if (score >= 30) return managedChallenge(req)                      // desafia
 
     const url = new URL(req.url)
     url.hostname = "origin.monteirotf.com"    // origem explícita (evita loop de subrequests)
@@ -497,8 +506,8 @@ export default {
   async fetch(req, env, ctx) {
     const score = threatScore(req)
 
-    if (score >= 80) return new Response("Forbidden", { status: 403 }) // block
-    if (score >= 60) return managedChallenge(req)                      // challenge
+    if (score >= 60) return new Response("Forbidden", { status: 403 }) // block
+    if (score >= 30) return managedChallenge(req)                      // challenge
 
     const url = new URL(req.url)
     url.hostname = "origin.monteirotf.com"    // explicit origin (prevents subrequest loops)
@@ -634,16 +643,17 @@ const projects: Project<L>[] = [
       "Bot attacks and data scrapers consumed excessive bandwidth and requests, inflating infrastructure costs without a viable mitigation tool on the free tier.",
     ),
     solution: l(
-      "Desenvolvi o Sentinel, um firewall de bots executado na edge com Cloudflare Workers e Durable Objects. Cada requisição recebe uma pontuação por assinaturas de TLS, versão de HTTP e headers do navegador, e agentes suspeitos são cortados antes de chegar à origem.",
-      "I built Sentinel, a bot firewall running at the edge on Cloudflare Workers and Durable Objects. Each request is scored by its TLS, HTTP version, and browser header signatures, and suspicious agents are cut off before they reach the origin.",
+      "Desenvolvi o Sentinel, um firewall de bots executado na edge com Cloudflare Workers e Durable Objects. Cada requisição recebe uma pontuação por assinaturas de TLS, versão de HTTP, headers do navegador e rede de origem, passa por um rate limit adaptativo por cliente e sai com um veredito na própria edge: libera, desafia ou bloqueia. O registro acontece em ctx.waitUntil, fora do caminho da resposta.",
+      "I built Sentinel, a bot firewall running at the edge on Cloudflare Workers and Durable Objects. Each request is scored by its TLS, HTTP version, browser header, and source network signatures, goes through a per-client adaptive rate limit, and gets a verdict right at the edge: allow, challenge, or block. Logging runs in ctx.waitUntil, off the response path.",
     ),
     impact: [
       { label: l("Tráfego malicioso", "Malicious traffic"), value: l("Bloqueado na edge", "Blocked at the edge") },
-      { label: l("Latência adicionada", "Added latency"), value: same("0ms (waitUntil)") },
+      { label: l("Registro de eventos", "Event logging"), value: l("Fora do caminho (waitUntil)", "Off the path (waitUntil)") },
       { label: l("Custo de API de segurança", "Security API cost"), value: same("$0 (free tier)") },
     ],
     stack: ["Cloudflare Workers", "Durable Objects", "JavaScript", "Vitest"],
     repo: "https://github.com/samuelmonteirotf/sentinel",
+    demo: "sentinel",
     tracks: ["devops"],
   },
   {
@@ -664,6 +674,7 @@ const projects: Project<L>[] = [
     ],
     stack: ["Rust", "Tokio", "Axum", "Hyper", "Prometheus", "Docker"],
     repo: "https://github.com/samuelmonteirotf/aegis-proxy",
+    demo: "aegis",
     tracks: ["devops"],
   },
   {
@@ -674,13 +685,13 @@ const projects: Project<L>[] = [
       "HTTP security header misconfigurations, DNS record (SPF/DMARC) flaws, and client-side credential leaks were difficult to continuously audit from the outside.",
     ),
     solution: l(
-      "Criei o RealScan, um scanner serverless em Cloudflare Workers que audita domínios em segundos, checando conformidade e segredos expostos. A arquitetura bloqueia vetores de SSRF negando faixas de IP privadas e reservadas (RFC1918).",
-      "I created RealScan, a serverless scanner on Cloudflare Workers that audits domains in seconds for compliance and exposed secrets. The architecture blocks SSRF vectors by denying private and reserved IP ranges (RFC1918).",
+      "Criei o RealScan, um scanner serverless em Cloudflare Workers que audita domínios de fora para dentro, checando headers, registros de e-mail e segredos expostos no cliente. A guarda anti-SSRF nega faixas privadas, loopback, link-local (incluindo o endpoint de metadados de nuvem), CGNAT e IPv4 escondido em IPv6.",
+      "I created RealScan, a serverless scanner on Cloudflare Workers that audits domains from the outside in, checking headers, email records, and client-side exposed secrets. The anti-SSRF guard denies private ranges, loopback, link-local (including the cloud metadata endpoint), CGNAT, and IPv4 hidden inside IPv6.",
     ),
     impact: [
-      { label: l("Varredura completa", "Full scan"), value: l("Segundos", "Seconds") },
+      { label: l("Execução", "Runtime"), value: l("Serverless na edge", "Serverless at the edge") },
       { label: l("Segredos no cliente", "Client-side secrets"), value: l("Detectados e ocultados", "Detected and redacted") },
-      { label: l("Guarda anti-SSRF", "SSRF guard"), value: l("RFC1918 bloqueado", "RFC1918 blocked") },
+      { label: l("Guarda anti-SSRF", "SSRF guard"), value: l("Privadas, loopback e metadados", "Private, loopback, metadata") },
     ],
     stack: ["Cloudflare Workers", "JavaScript", "DNS-over-HTTPS"],
     repo: "https://github.com/samuelmonteirotf/realscan",
@@ -706,6 +717,7 @@ const projects: Project<L>[] = [
     repo: "https://github.com/samuelmonteirotf/TessTrade",
     repoLabel: l("Case técnico", "Tech case"),
     live: "https://tesstrade.com",
+    demo: "backtest",
     tracks: ["fullstack"],
   },
   {
@@ -737,13 +749,13 @@ const projects: Project<L>[] = [
       "Keeping Unix environments consistent, reproducible, and free of exposed sensitive data (API keys, credentials, history) when publishing the configurations to a public repository.",
     ),
     solution: l(
-      "Repositório de dotfiles autocontido na estética Crimson (bspwm, sxhkd, picom, polybar, dunst e rofi), com instalador Shell idempotente (setup.sh) que simula a instalação com dry-run antes de tocar em qualquer arquivo, suporte a GNU Stow, backups automáticos com timestamp e isolamento de falhas. Antes de publicar, um pipeline de sanitização vira paths absolutos em $HOME e exclui credenciais e históricos.",
-      "A self-contained dotfiles repository in the Crimson aesthetic (bspwm, sxhkd, picom, polybar, dunst, and rofi), with an idempotent Shell installer (setup.sh) that dry-runs the installation before touching any file, GNU Stow support, automatic timestamped backups, and fault isolation. Before publishing, a sanitization pipeline turns absolute paths into $HOME and strips credentials and history.",
+      "Repositório de dotfiles autocontido na estética Crimson (bspwm, sxhkd, picom, polybar, dunst e rofi), com instalador Shell idempotente (setup.sh) com modo --dry-run para ver o que mudaria sem tocar em nada, suporte a GNU Stow, backups automáticos com timestamp e isolamento de falhas. Credenciais e históricos ficam fora do repositório por regras explícitas de .gitignore.",
+      "A self-contained dotfiles repository in the Crimson aesthetic (bspwm, sxhkd, picom, polybar, dunst, and rofi), with an idempotent Shell installer (setup.sh) with a --dry-run mode to preview every change without touching anything, GNU Stow support, automatic timestamped backups, and fault isolation. Credentials and history stay out of the repository through explicit .gitignore rules.",
     ),
     impact: [
-      { label: l("Instalação", "Installation"), value: l("Idempotente, com dry-run", "Idempotent, with dry-run") },
+      { label: l("Instalação", "Installation"), value: l("Idempotente, --dry-run opcional", "Idempotent, optional --dry-run") },
       { label: l("Implantação", "Deployment"), value: l("Link direto / GNU Stow", "Direct link / GNU Stow") },
-      { label: l("Privacidade", "Privacy"), value: l("Sanitização automatizada", "Automated sanitization") },
+      { label: l("Privacidade", "Privacy"), value: l("Segredos fora via .gitignore", "Secrets kept out via .gitignore") },
     ],
     stack: ["Linux", "Shell Script", "BSPWM", "sxhkd", "GNU Stow", "Polybar"],
     repo: "https://github.com/samuelmonteirotf/dotfiles-bspwm",
@@ -848,8 +860,8 @@ const ui: UiStrings<L> = {
     controlRoom: {
       title: l("Sala de Controle", "Control Room"),
       description: l(
-        "A topologia da minha infraestrutura de segurança na edge, da borda até a origem. Arraste para girar; clique num nó para inspecionar o que ele faz, como é protegido e suas métricas.",
-        "My edge security infrastructure topology, from the edge to the origin. Drag to rotate; click a node to inspect what it does, how it is hardened, and its metrics.",
+        "Ao lado, o tráfego real que passou pelo Sentinel, dividido por veredito na proporção exata do painel abaixo. Escolha uma peça da stack para ver o que ela faz e como é protegida.",
+        "Alongside, the real traffic that went through Sentinel, split by verdict in the exact proportion of the panel below. Pick a piece of the stack to see what it does and how it is hardened.",
       ),
     },
     experience: {
@@ -871,33 +883,36 @@ const ui: UiStrings<L> = {
     problem: l("Problema", "Problem"),
     approach: l("Abordagem", "Approach"),
     repo: l("Repositório", "Repository"),
+    caseStudy: l("Case completo", "Full case study"),
   },
   controlRoom: {
     status: l("Sistema saudável", "System healthy"),
+    noTelemetry: l("Sem telemetria", "No telemetry"),
+    live: l("telemetria ao vivo", "live telemetry"),
     uptime: l("sentinel ativo na edge", "sentinel active at the edge"),
     legendAria: l("Nós da topologia", "Topology nodes"),
     nodes: {
       internet: {
         sub: l("tráfego de entrada", "inbound traffic"),
         desc: l(
-          "Usuários reais e bots chegam aqui. A maior parte do tráfego é maliciosa (scrapers, requisições de datacenter) e é descartada na edge antes de tocar a origem.",
-          "Real users and bots arrive here. Most of the traffic is malicious (scrapers, datacenter requests) and is dropped at the edge before hitting the origin.",
+          "Usuários reais e bots chegam aqui. A maior parte do tráfego é maliciosa (scrapers, requisições de datacenter) e é barrada ou desafiada na edge.",
+          "Real users and bots arrive here. Most of the traffic is malicious (scrapers, datacenter requests) and is blocked or challenged at the edge.",
         ),
         tags: [l("bots e scrapers", "bots and scrapers"), l("filtrado na edge", "filtered at edge")],
       },
       sentinel: {
         sub: same("Cloudflare Worker · edge"),
         desc: l(
-          "Firewall de bots na edge. Pontua cada requisição (User-Agent · Accept-Language · versão de HTTP · TLS · ASN) e decide antes de chegar à origem: bloqueia (≥80), desafia (≥60) ou libera. Durable Objects: RateLimiter por IP + Stats. Log via ctx.waitUntil, fora do caminho crítico.",
-          "Edge bot firewall. Scores each request (User-Agent · Accept-Language · HTTP version · TLS · ASN) and decides before the origin: blocks (≥80), challenges (≥60), or allows. Durable Objects: per-IP RateLimiter + Stats. Logged via ctx.waitUntil, outside the critical path.",
+          "Firewall de bots na edge. Pontua cada requisição (User-Agent · Accept-Language · versão de HTTP · TLS · ASN) e decide na edge: bloqueia (≥60), desafia (≥30) ou libera. Durable Objects: RateLimiter adaptativo por cliente + Stats. O registro vai para ctx.waitUntil; o rate limit fica no caminho.",
+          "Edge bot firewall. Scores each request (User-Agent · Accept-Language · HTTP version · TLS · ASN) and decides at the edge: blocks (≥60), challenges (≥30), or allows. Durable Objects: per-client adaptive RateLimiter + Stats. Recording goes to ctx.waitUntil; the rate limit stays on the path.",
         ),
-        tags: [l("bloqueio por pontuação", "score-based blocking"), l("0ms de latência", "0ms latency"), same("$0 free tier"), same("Durable Objects")],
+        tags: [l("bloqueio por pontuação", "score-based blocking"), l("log fora do caminho", "off-path logging"), same("$0 free tier"), same("Durable Objects")],
       },
       realscan: {
         sub: same("Cloudflare Worker · edge"),
         desc: l(
-          "Worker irmão do Sentinel: scanner externo de postura de segurança (headers, SPF/DMARC/DNSSEC, segredos expostos no cliente) com guarda anti-SSRF que bloqueia faixas privadas e reservadas (RFC1918).",
-          "Sentinel's sibling worker: an external security posture scanner (headers, SPF/DMARC/DNSSEC, exposed client-side secrets) with an anti-SSRF guard that blocks private and reserved ranges (RFC1918).",
+          "Worker irmão do Sentinel: scanner externo de postura de segurança (headers, SPF/DMARC/DNSSEC, segredos expostos no cliente) com guarda anti-SSRF que bloqueia faixas privadas, loopback, link-local e o endpoint de metadados de nuvem.",
+          "Sentinel's sibling worker: an external security posture scanner (headers, SPF/DMARC/DNSSEC, exposed client-side secrets) with an anti-SSRF guard that blocks private, loopback, and link-local ranges, including the cloud metadata endpoint.",
         ),
         tags: [same("DoH 1.1.1.1"), l("guarda anti-SSRF", "SSRF guard"), l("auditoria de headers", "headers audit")],
       },
@@ -944,6 +959,11 @@ const ui: UiStrings<L> = {
     },
   },
   experienceSection: { certifications: l("Certificações", "Certifications") },
+  contactSection: {
+    lead: l("Vamos construir algo.", "Let's build something."),
+    copy: l("Copiar e-mail", "Copy email"),
+    copied: l("Copiado", "Copied"),
+  },
   configShowcase: { tablistAria: l("Exemplos de configuração", "Configuration examples") },
   footer: { rights: l("Todos os direitos reservados.", "All rights reserved.") },
 }

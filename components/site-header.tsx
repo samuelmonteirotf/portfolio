@@ -6,6 +6,7 @@ import { HeroBackdrop } from "@/components/hero-backdrop"
 import { ResumeDownload } from "@/components/resume-download"
 import { ModeToggle } from "@/components/mode-toggle"
 import { LangToggle } from "@/components/lang-toggle"
+import { TerminalTrigger } from "@/components/terminal"
 import { usePillMode } from "@/components/pill-mode"
 import { useContent, useLanguage } from "@/components/language"
 import { modeColors, type ModeKey } from "@/lib/portfolio-data"
@@ -16,12 +17,10 @@ import { modeColors, type ModeKey } from "@/lib/portfolio-data"
  * hex do modo ativo. O texto NÃO viaja entre modos: a esfera se move, o texto
  * ancora; só strings e cores trocam. */
 
-/* Posição da legenda que pousa junto com a esfera (27% / 73%, os mesmos
- * alvos de layout do canvas). O modo "all" fica sem legenda de propósito. */
-const CAPTION_LEFT: Partial<Record<ModeKey, string>> = {
-  fullstack: "27%",
-  devops: "73%",
-}
+/* A legenda pousa junto com a esfera: posição publicada pelo canvas
+ * (--orb-caption-x/y), só no layout lateral do desktop. O modo "all" fica
+ * sem legenda de propósito. */
+const HAS_CAPTION: Record<ModeKey, boolean> = { fullstack: true, devops: true, all: false }
 
 export function SiteHeader() {
   const { mode } = usePillMode()
@@ -29,7 +28,6 @@ export function SiteHeader() {
   const { modes, profile, ui } = useContent()
   const reduce = useReducedMotion()
   const color = modeColors[mode]
-  const captionLeft = CAPTION_LEFT[mode]
   const captionText = mode === "fullstack" ? ui.header.captionFullstack : ui.header.captionDevops
   const fade = { duration: reduce ? 0.15 : 0.24, ease: "easeOut" as const }
   // reduced-motion: crossfade só de opacidade, sem viagem vertical do texto
@@ -39,31 +37,30 @@ export function SiteHeader() {
   const parts = modes[mode].taglineParts
 
   return (
-    <header
-      className="relative flex min-h-screen min-h-dvh flex-col overflow-hidden border-b border-border"
-      style={{ "--mode": color } as React.CSSProperties}
-    >
+    <header data-hero className="group/hero relative z-10 flex min-h-screen min-h-dvh flex-col overflow-hidden border-b border-border">
       <HeroBackdrop />
 
-      {/* seletor de idioma: canto superior direito, fora do caminho da esfera */}
-      <div className="absolute right-6 top-6 z-20 sm:right-8 sm:top-8">
+      {/* terminal + idioma: canto superior direito, fora do caminho da esfera */}
+      <div className="absolute right-6 top-6 z-20 flex items-center gap-2 sm:right-8 sm:top-8">
+        <TerminalTrigger />
         <LangToggle />
       </div>
 
+      {/* --orb-caption-o: a esfera publica ao rolar (a legenda some quando ela sai do hero) */}
+      <div className="pointer-events-none absolute inset-0 z-[5]" style={{ opacity: "var(--orb-caption-o, 1)" }}>
       <AnimatePresence>
-        {captionLeft ? (
+        {HAS_CAPTION[mode] ? (
           <motion.span
             key={`${mode}-${lang}`}
             aria-hidden="true"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, transition: { delay: reduce ? 0 : 0.9, duration: reduce ? 0.15 : 0.4 } }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
-            className="pointer-events-none absolute z-[5] hidden -translate-x-1/2 font-mono text-xs font-medium uppercase tracking-[0.22em] [@media(min-width:1024px)_and_(min-height:780px)]:block"
+            className="pointer-events-none absolute z-[5] hidden -translate-x-1/2 font-mono text-xs font-medium uppercase tracking-[0.22em] group-data-[orb-layout=side]/hero:block"
             style={{
-              left: captionLeft,
               // posição publicada pelo canvas (measure): logo acima da esfera
-              // encaixada no espaço livre, já sem risco de encostar no texto
-              top: "var(--orb-caption-y, 30%)",
+              left: "var(--orb-caption-x, 72%)",
+              top: "var(--orb-caption-y, 20%)",
               color,
             }}
           >
@@ -71,6 +68,7 @@ export function SiteHeader() {
           </motion.span>
         ) : null}
       </AnimatePresence>
+      </div>
 
       {/* topo = identidade (a constante) · meio = palco da esfera · base = console (o que a escolha reescreve) */}
       <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col justify-between gap-10 px-6 py-16 sm:py-20">
@@ -114,14 +112,16 @@ export function SiteHeader() {
           className="relative flex max-w-xl flex-col gap-5 border-l-2 pl-5"
           style={{ borderColor: color, transition: "border-color 620ms ease-out" }}
         >
-          {/* scrim: em viewports baixas (~≤750px) a esfera assenta atrás deste
-              bloco — sem isso o texto fica ilegível sobre o núcleo branco */}
+          {/* scrim: em telas estreitas a esfera divide o espaço com o console;
+              closest-side garante que o gradiente zera ANTES da borda da caixa
+              (sem retângulo visível cortando a esfera). No desktop a esfera
+              vive à direita e o scrim não existe. */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -inset-x-14 -inset-y-10 -z-10"
+            className="pointer-events-none absolute -inset-x-14 -inset-y-12 -z-10 lg:hidden"
             style={{
               background:
-                "radial-gradient(ellipse 130% 160% at 30% 50%, rgba(3,3,3,0.9) 0%, rgba(3,3,3,0.6) 50%, transparent 100%)",
+                "radial-gradient(closest-side, rgba(3,3,3,0.92) 0%, rgba(3,3,3,0.7) 60%, transparent 100%)",
             }}
           />
           <div className="relative">
