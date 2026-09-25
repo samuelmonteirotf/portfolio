@@ -1,0 +1,50 @@
+name: Deploy
+
+# Cada push na main compila o site, confere que o canvas de partículas
+# compila no navegador e publica no Cloudflare Pages (projeto "portfolio",
+# servido em monteirotf.com).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+      - name: Smoke test (particle shader)
+        run: |
+          npx playwright install --with-deps chromium
+          npx -y serve@14 out -l 4173 > /dev/null 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:4173/ > /dev/null && break; sleep 1; done
+          npm run smoke
+
+      - name: Deploy to Cloudflare Pages
+        run: npx wrangler pages deploy out --project-name=portfolio --branch=main --commit-hash=${{ github.sha }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
