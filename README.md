@@ -32,8 +32,8 @@ The application relies on Cloudflare Pages for global distribution. Next.js serv
 1. Clone the repository to your local machine.
 2. Install project dependencies using npm ci.
 3. Start the local development server using npm run dev.
-5. Before deploying, run the canvas smoke test against the build (`npm run build`, serve `out/` on port 4173, then `npm run smoke`). It fails if the particle shader does not compile in Chromium or WebKit.
 4. Access the application on localhost port 3000.
+5. Before deploying, run the canvas smoke test against the build (`npm run build`, serve `out/` on port 4173, then `npm run smoke`). It fails if the particle shader does not compile in Chromium or WebKit.
 
 ## Cloud Environment Configuration
 
