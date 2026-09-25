@@ -10,8 +10,8 @@ import {
 import { useEffect, useRef, useState, type ReactNode } from "react"
 
 /* ------------------------------------------------------------------ *
- * Scroll-motion simples e seguro: subida em spring pesado (DESIGN.md
- * cinematic-entry) + fade. Coleções entram em stagger, uma vez só.
+ * Scroll-motion simples e seguro: subida em spring pesado (mass 1.2,
+ * stiffness 45, damping 18) + fade. Coleções entram em stagger, uma vez só.
  *
  * A detecção de viewport é própria (não o whileInView do motion) por dois
  * motivos observados em produção: (1) saltos programáticos de scroll
