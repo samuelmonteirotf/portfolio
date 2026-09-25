@@ -164,7 +164,7 @@
 @property --mode {
   syntax: '<color>';
   inherits: true;
-  initial-value: #e0555a;
+  initial-value: #9d6bf0;
 }
 
 html {

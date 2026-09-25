@@ -2,7 +2,7 @@
  *
  * Uso:
  *   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm i playwright --no-save --legacy-peer-deps
- *   npx playwright install chromium-headless-shell   # uma vez por máquina
+ *   npx playwright install chromium-headless-shell   # opcional: sem ele, usa o Chrome instalado
  *   npm run cv
  *
  * O playwright fica fora do package.json de propósito: como devDependency, o
@@ -316,7 +316,8 @@ const MODES = {
 
 /* --------------------------------- geração --------------------------------- */
 
-const browser = await chromium.launch()
+// sem o Chromium do Playwright baixado, usa o Chrome instalado na máquina
+const browser = await chromium.launch().catch(() => chromium.launch({ channel: "chrome" }))
 for (const lang of ["pt", "en"]) {
   for (const [modeKey, mode] of Object.entries(MODES)) {
     const data = {

@@ -5,7 +5,7 @@ import { modeColors, type ModeKey } from "@/lib/portfolio-data"
 
 /* Estado global do "modo" (pílula azul = full-stack · vermelha = devops).
  * Contexto client compartilhado entre hero, resumo e projetos. A escolha
- * persiste em localStorage; o SSR sempre parte de "devops" pra não dar
+ * persiste em localStorage; o SSR sempre parte de "all" (os dois lados, o público principal) pra não dar
  * hydration mismatch, e o valor salvo entra depois do mount.
  *
  * `mode` muda no clique (hero, toggle, rodapé reagem na hora). `settledMode`
@@ -19,8 +19,8 @@ const STORAGE_KEY = "pill-mode"
 const SETTLE_MS = 750 // > DISPERSE_MS (620ms) das partículas do hero
 
 export function PillModeProvider({ children }: { children: ReactNode }) {
-  const [mode, setModeState] = useState<ModeKey>("devops")
-  const [settledMode, setSettledMode] = useState<ModeKey>("devops")
+  const [mode, setModeState] = useState<ModeKey>("all")
+  const [settledMode, setSettledMode] = useState<ModeKey>("all")
 
   useEffect(() => {
     // storage bloqueado (navegação privada restrita) não pode derrubar o site

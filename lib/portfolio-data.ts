@@ -56,6 +56,8 @@ export type Project<T = string> = {
   // fechado usam "Case técnico" para o clique não frustrar
   repoLabel?: T
   live?: string
+  // print do produto no ar (capítulo e página de case)
+  image?: { src: string; alt: T }
   // demo interativa embutida no card (components/demos)
   demo?: "sentinel" | "aegis" | "backtest"
   tracks: ModeKey[]
@@ -636,6 +638,57 @@ jobs:
 
 const projects: Project<L>[] = [
   {
+    title: l("TessTrade (Trading Algorítmico)", "TessTrade (Algorithmic Trading)"),
+    context: l("TessTrade-Corp · No ar", "TessTrade-Corp · Live"),
+    problem: l(
+      "Traders quantitativos não tinham um único lugar para escrever, testar e compartilhar estratégias: backtesting exige processar séries históricas pesadas em paralelo, e a interface precisa continuar fluida recebendo ticks em alta frequência.",
+      "Quantitative traders had no single place to write, test, and share strategies: backtesting requires processing heavy historical series in parallel, and the interface must stay fluid while receiving high-frequency ticks.",
+    ),
+    solution: l(
+      "Arquitetei a plataforma completa: engine de simulação multithread em Rust para Monte Carlo e processamento de ticks, indicadores em Python executados em sandbox e ligados à engine via FFI/RPC, e um workspace modular em React com Monaco Editor para desenvolver estratégias no próprio navegador. Séries temporais em TimescaleDB, identidade com Clerk, estado com Zustand e TanStack Query. Código fechado por política corporativa.",
+      "I architected the whole platform: a multithreaded Rust simulation engine for Monte Carlo and tick processing, Python indicators running in a sandbox and connected to the engine via FFI/RPC, and a modular React workspace with Monaco Editor for developing strategies right in the browser. Time series in TimescaleDB, identity with Clerk, state with Zustand and TanStack Query. Source code withheld under corporate policy.",
+    ),
+    impact: [
+      { label: l("Engine de simulação", "Simulation engine"), value: l("Rust multithread", "Multithreaded Rust") },
+      { label: l("Estratégias no navegador", "Strategies in the browser"), value: same("Monaco + sandbox Python") },
+      { label: l("Séries temporais", "Time series"), value: same("TimescaleDB") },
+    ],
+    stack: ["Rust · Axum", "React", "TypeScript", "Python", "TimescaleDB", "Three.js", "Docker"],
+    repo: "https://github.com/samuelmonteirotf/TessTrade",
+    repoLabel: l("Case técnico", "Tech case"),
+    live: "https://tesstrade.com",
+    image: {
+      src: "/projects/tesstrade-backtest.jpg",
+      alt: l(
+        "Workspace de backtest da TessTrade: lista de estratégias, curva de patrimônio e histórico de trades",
+        "TessTrade backtest workspace: strategy list, equity curve and trade history",
+      ),
+    },
+    demo: "backtest",
+    tracks: ["fullstack"],
+  },
+  {
+    title: l("6ID (Ecossistema Distribuído)", "6ID (Distributed Ecosystem)"),
+    context: l("6ID Trading Solutions · Corporativo", "6ID Trading Solutions · Corporate"),
+    problem: l(
+      "Plataformas de trading precisavam gerenciar licenças, autenticar usuários e administrar operações em três frentes ao mesmo tempo: uma API central, um console web e um cliente desktop rodando na máquina de cada usuário.",
+      "Trading platforms needed to manage licenses, authenticate users, and run administration across three fronts at once: a central API, a web console, and a desktop client running on each user's machine.",
+    ),
+    solution: l(
+      "Projetei o ecossistema inteiro: backend assíncrono em FastAPI com SQLAlchemy e Asyncpg para validação concorrente de licenças, console de administração em Next.js com validação espelhada entre Pydantic e Zod, e o cliente Windows em WPF no .NET 8, compilado com ReadyToRun num binário único e enxuto. Código fechado por política de segurança corporativa.",
+      "I designed the entire ecosystem: an asynchronous FastAPI backend with SQLAlchemy and Asyncpg for concurrent license validation, a Next.js administration console with validation mirrored between Pydantic and Zod, and a Windows WPF client on .NET 8, compiled with ReadyToRun into a single lean binary. Source code withheld under corporate security policy.",
+    ),
+    impact: [
+      { label: l("Arquitetura", "Architecture"), value: l("API + console web + desktop", "API + web console + desktop") },
+      { label: l("Cliente Windows", "Windows client"), value: l(".NET 8 ReadyToRun, binário único", ".NET 8 ReadyToRun, single binary") },
+      { label: l("Validação", "Validation"), value: l("Pydantic e Zod espelhados", "Mirrored Pydantic and Zod") },
+    ],
+    stack: ["FastAPI", "Next.js", "TypeScript", "C# · WPF", "PostgreSQL", "Docker"],
+    repo: "https://github.com/samuelmonteirotf/6ID",
+    repoLabel: l("Case técnico", "Tech case"),
+    tracks: ["fullstack"],
+  },
+  {
     title: l("Sentinel (Firewall de Bots na Edge)", "Sentinel (Edge Bot Firewall)"),
     context: l("Firewall e Segurança de Edge", "Firewall & Edge Security"),
     problem: l(
@@ -695,70 +748,6 @@ const projects: Project<L>[] = [
     ],
     stack: ["Cloudflare Workers", "JavaScript", "DNS-over-HTTPS"],
     repo: "https://github.com/samuelmonteirotf/realscan",
-    tracks: ["devops"],
-  },
-  {
-    title: l("TessTrade (Trading Algorítmico)", "TessTrade (Algorithmic Trading)"),
-    context: l("TessTrade-Corp · No ar", "TessTrade-Corp · Live"),
-    problem: l(
-      "Traders quantitativos não tinham um único lugar para escrever, testar e compartilhar estratégias: backtesting exige processar séries históricas pesadas em paralelo, e a interface precisa continuar fluida recebendo ticks em alta frequência.",
-      "Quantitative traders had no single place to write, test, and share strategies: backtesting requires processing heavy historical series in parallel, and the interface must stay fluid while receiving high-frequency ticks.",
-    ),
-    solution: l(
-      "Arquitetei a plataforma completa: engine de simulação multithread em Rust para Monte Carlo e processamento de ticks, indicadores em Python executados em sandbox e ligados à engine via FFI/RPC, e um workspace modular em React com Monaco Editor para desenvolver estratégias no próprio navegador. Séries temporais em TimescaleDB, identidade com Clerk, estado com Zustand e TanStack Query. Código fechado por política corporativa.",
-      "I architected the whole platform: a multithreaded Rust simulation engine for Monte Carlo and tick processing, Python indicators running in a sandbox and connected to the engine via FFI/RPC, and a modular React workspace with Monaco Editor for developing strategies right in the browser. Time series in TimescaleDB, identity with Clerk, state with Zustand and TanStack Query. Source code withheld under corporate policy.",
-    ),
-    impact: [
-      { label: l("Engine de simulação", "Simulation engine"), value: l("Rust multithread", "Multithreaded Rust") },
-      { label: l("Estratégias no navegador", "Strategies in the browser"), value: same("Monaco + sandbox Python") },
-      { label: l("Séries temporais", "Time series"), value: same("TimescaleDB") },
-    ],
-    stack: ["Rust · Axum", "React", "TypeScript", "Python", "TimescaleDB", "Three.js", "Docker"],
-    repo: "https://github.com/samuelmonteirotf/TessTrade",
-    repoLabel: l("Case técnico", "Tech case"),
-    live: "https://tesstrade.com",
-    demo: "backtest",
-    tracks: ["fullstack"],
-  },
-  {
-    title: l("6ID (Ecossistema Distribuído)", "6ID (Distributed Ecosystem)"),
-    context: l("6ID Trading Solutions · Corporativo", "6ID Trading Solutions · Corporate"),
-    problem: l(
-      "Plataformas de trading precisavam gerenciar licenças, autenticar usuários e administrar operações em três frentes ao mesmo tempo: uma API central, um console web e um cliente desktop rodando na máquina de cada usuário.",
-      "Trading platforms needed to manage licenses, authenticate users, and run administration across three fronts at once: a central API, a web console, and a desktop client running on each user's machine.",
-    ),
-    solution: l(
-      "Projetei o ecossistema inteiro: backend assíncrono em FastAPI com SQLAlchemy e Asyncpg para validação concorrente de licenças, console de administração em Next.js com validação espelhada entre Pydantic e Zod, e o cliente Windows em WPF no .NET 8, compilado com ReadyToRun num binário único e enxuto. Código fechado por política de segurança corporativa.",
-      "I designed the entire ecosystem: an asynchronous FastAPI backend with SQLAlchemy and Asyncpg for concurrent license validation, a Next.js administration console with validation mirrored between Pydantic and Zod, and a Windows WPF client on .NET 8, compiled with ReadyToRun into a single lean binary. Source code withheld under corporate security policy.",
-    ),
-    impact: [
-      { label: l("Arquitetura", "Architecture"), value: l("API + console web + desktop", "API + web console + desktop") },
-      { label: l("Cliente Windows", "Windows client"), value: l(".NET 8 ReadyToRun, binário único", ".NET 8 ReadyToRun, single binary") },
-      { label: l("Validação", "Validation"), value: l("Pydantic e Zod espelhados", "Mirrored Pydantic and Zod") },
-    ],
-    stack: ["FastAPI", "Next.js", "TypeScript", "C# · WPF", "PostgreSQL", "Docker"],
-    repo: "https://github.com/samuelmonteirotf/6ID",
-    repoLabel: l("Case técnico", "Tech case"),
-    tracks: ["fullstack"],
-  },
-  {
-    title: l("dotfiles-bspwm (Configuração como Código)", "dotfiles-bspwm (Configuration as Code)"),
-    context: l("Administração de Sistemas Linux", "Linux Systems Administration"),
-    problem: l(
-      "Manter ambientes Unix consistentes, reproduzíveis e sem dados sensíveis expostos (chaves de API, credenciais, histórico) ao publicar as configurações em repositório público.",
-      "Keeping Unix environments consistent, reproducible, and free of exposed sensitive data (API keys, credentials, history) when publishing the configurations to a public repository.",
-    ),
-    solution: l(
-      "Repositório de dotfiles autocontido na estética Crimson (bspwm, sxhkd, picom, polybar, dunst e rofi), com instalador Shell idempotente (setup.sh) com modo --dry-run para ver o que mudaria sem tocar em nada, suporte a GNU Stow, backups automáticos com timestamp e isolamento de falhas. Credenciais e históricos ficam fora do repositório por regras explícitas de .gitignore.",
-      "A self-contained dotfiles repository in the Crimson aesthetic (bspwm, sxhkd, picom, polybar, dunst, and rofi), with an idempotent Shell installer (setup.sh) with a --dry-run mode to preview every change without touching anything, GNU Stow support, automatic timestamped backups, and fault isolation. Credentials and history stay out of the repository through explicit .gitignore rules.",
-    ),
-    impact: [
-      { label: l("Instalação", "Installation"), value: l("Idempotente, --dry-run opcional", "Idempotent, optional --dry-run") },
-      { label: l("Implantação", "Deployment"), value: l("Link direto / GNU Stow", "Direct link / GNU Stow") },
-      { label: l("Privacidade", "Privacy"), value: l("Segredos fora via .gitignore", "Secrets kept out via .gitignore") },
-    ],
-    stack: ["Linux", "Shell Script", "BSPWM", "sxhkd", "GNU Stow", "Polybar"],
-    repo: "https://github.com/samuelmonteirotf/dotfiles-bspwm",
     tracks: ["devops"],
   },
 ]

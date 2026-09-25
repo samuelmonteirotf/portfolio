@@ -1,4 +1,409 @@
 {
+ "tesstrade": {
+  "oneLiner": {
+   "pt": "Plataforma de trading algorítmico que junta rede social, ambiente de desenvolvimento quantitativo no navegador e engine de backtesting em Rust.",
+   "en": "An algorithmic trading platform that combines social features, an in-browser quantitative development environment and a Rust backtesting engine."
+  },
+  "architecture": {
+   "nodes": [
+    {
+     "id": "workspace",
+     "label": {
+      "pt": "Workspace do trader",
+      "en": "Trader workspace"
+     },
+     "sub": {
+      "pt": "React, Vite, Zustand",
+      "en": "React, Vite, Zustand"
+     },
+     "col": 0,
+     "row": 0
+    },
+    {
+     "id": "editor",
+     "label": {
+      "pt": "IDE e gráficos",
+      "en": "IDE and charts"
+     },
+     "sub": {
+      "pt": "Monaco, Three.js, D3",
+      "en": "Monaco, Three.js, D3"
+     },
+     "col": 0,
+     "row": 1
+    },
+    {
+     "id": "gateway",
+     "label": {
+      "pt": "API Gateway",
+      "en": "API Gateway"
+     },
+     "sub": {
+      "pt": "Traefik",
+      "en": "Traefik"
+     },
+     "col": 1,
+     "row": 0
+    },
+    {
+     "id": "clerk",
+     "label": {
+      "pt": "Clerk",
+      "en": "Clerk"
+     },
+     "sub": {
+      "pt": "autenticação e sessão",
+      "en": "authentication and sessions"
+     },
+     "col": 1,
+     "row": 1
+    },
+    {
+     "id": "api",
+     "label": {
+      "pt": "Core API",
+      "en": "Core API"
+     },
+     "sub": {
+      "pt": "Rust, Axum",
+      "en": "Rust, Axum"
+     },
+     "col": 2,
+     "row": 0
+    },
+    {
+     "id": "python",
+     "label": {
+      "pt": "Sandbox Python",
+      "en": "Python sandbox"
+     },
+     "sub": {
+      "pt": "indicadores escritos pelo usuário",
+      "en": "user-authored indicators"
+     },
+     "col": 3,
+     "row": 0
+    },
+    {
+     "id": "db",
+     "label": {
+      "pt": "TimescaleDB",
+      "en": "TimescaleDB"
+     },
+     "sub": {
+      "pt": "séries temporais em PostgreSQL",
+      "en": "PostgreSQL time series"
+     },
+     "col": 3,
+     "row": 1
+    },
+    {
+     "id": "redis",
+     "label": {
+      "pt": "Redis",
+      "en": "Redis"
+     },
+     "sub": {
+      "pt": "PubSub",
+      "en": "PubSub"
+     },
+     "col": 3,
+     "row": 2
+    }
+   ],
+   "edges": [
+    {
+     "from": "workspace",
+     "to": "editor",
+     "label": null
+    },
+    {
+     "from": "workspace",
+     "to": "gateway",
+     "label": {
+      "pt": "HTTPS / WSS",
+      "en": "HTTPS / WSS"
+     }
+    },
+    {
+     "from": "workspace",
+     "to": "clerk",
+     "label": {
+      "pt": "autenticação",
+      "en": "authentication"
+     }
+    },
+    {
+     "from": "gateway",
+     "to": "api",
+     "label": null
+    },
+    {
+     "from": "api",
+     "to": "python",
+     "label": {
+      "pt": "RPC",
+      "en": "RPC"
+     }
+    },
+    {
+     "from": "api",
+     "to": "db",
+     "label": {
+      "pt": "leitura e escrita",
+      "en": "reads and writes"
+     }
+    },
+    {
+     "from": "api",
+     "to": "redis",
+     "label": {
+      "pt": "computação",
+      "en": "compute"
+     }
+    }
+   ]
+  },
+  "decisions": [
+   {
+    "title": {
+     "pt": "Camada de execução migrada para Rust",
+     "en": "Execution layer migrated to Rust"
+    },
+    "why": {
+     "pt": "Simulações paralelas exigiam processar séries históricas em vários núcleos. Migrei para uma arquitetura multithread em Rust para evitar a limitação de thread única do Node.js e o GIL do Python.",
+     "en": "Parallel simulations required processing historical datasets across multiple cores. I moved to a multithreaded Rust architecture to avoid Node.js single-thread limits and the Python GIL."
+    },
+    "tradeoff": null
+   },
+   {
+    "title": {
+     "pt": "Indicadores em Python num sandbox, ligados à engine",
+     "en": "Python indicators in a sandbox, wired to the engine"
+    },
+    "why": {
+     "pt": "O usuário escreve o indicador no Monaco. O código vai para um worker Python isolado que valida a lógica e envia a saída para a engine Rust simular, via FFI/RPC.",
+     "en": "Users write indicators in Monaco. The code goes to an isolated Python worker that validates the logic and streams output to the Rust engine for simulation, via FFI/RPC."
+    },
+    "tradeoff": null
+   },
+   {
+    "title": {
+     "pt": "Zustand com componentes atômicos no workspace",
+     "en": "Zustand with atomic components in the workspace"
+    },
+    "why": {
+     "pt": "Usei Zustand com componentes atômicos para evitar re-renderizações em cascata do React enquanto chegam ticks em alta frequência, num layout em grade redimensionável com gráficos, editores e livro de ofertas.",
+     "en": "I used Zustand with atomic components to prevent cascading React re-renders while high-frequency ticks arrive, in a resizable grid of charts, editors and order books."
+    },
+    "tradeoff": null
+   }
+  ],
+  "numbers": [
+   {
+    "label": {
+     "pt": "Versão do React",
+     "en": "React version"
+    },
+    "value": "18",
+    "source": "README.md"
+   }
+  ],
+  "sources": [
+   "TessTrade/README.md"
+  ]
+ },
+ "6id": {
+  "oneLiner": {
+   "pt": "Ecossistema para gerenciar licenças, autenticar usuários e administrar plataformas de trading, com API central, console web e cliente desktop para Windows.",
+   "en": "An ecosystem to manage licenses, authenticate users and administer trading platforms, with a central API, a web console and a Windows desktop client."
+  },
+  "architecture": {
+   "nodes": [
+    {
+     "id": "web",
+     "label": {
+      "pt": "Console web",
+      "en": "Web console"
+     },
+     "sub": {
+      "pt": "Next.js 14 (App Router), React 18",
+      "en": "Next.js 14 (App Router), React 18"
+     },
+     "col": 0,
+     "row": 0
+    },
+    {
+     "id": "desktop",
+     "label": {
+      "pt": "Cliente desktop",
+      "en": "Desktop client"
+     },
+     "sub": {
+      "pt": "WPF, .NET 8, MVVM",
+      "en": "WPF, .NET 8, MVVM"
+     },
+     "col": 0,
+     "row": 1
+    },
+    {
+     "id": "gateway",
+     "label": {
+      "pt": "API Gateway",
+      "en": "API Gateway"
+     },
+     "sub": {
+      "pt": "load balancer",
+      "en": "load balancer"
+     },
+     "col": 1,
+     "row": 0
+    },
+    {
+     "id": "api",
+     "label": {
+      "pt": "Core API",
+      "en": "Core API"
+     },
+     "sub": {
+      "pt": "FastAPI, SQLAlchemy 2.0, Pydantic",
+      "en": "FastAPI, SQLAlchemy 2.0, Pydantic"
+     },
+     "col": 2,
+     "row": 0
+    },
+    {
+     "id": "db",
+     "label": {
+      "pt": "PostgreSQL",
+      "en": "PostgreSQL"
+     },
+     "sub": {
+      "pt": "Asyncpg, migrações Alembic",
+      "en": "Asyncpg, Alembic migrations"
+     },
+     "col": 3,
+     "row": 0
+    },
+    {
+     "id": "pdf",
+     "label": {
+      "pt": "Relatórios PDF",
+      "en": "PDF reports"
+     },
+     "sub": {
+      "pt": "ReportLab",
+      "en": "ReportLab"
+     },
+     "col": 3,
+     "row": 1
+    }
+   ],
+   "edges": [
+    {
+     "from": "web",
+     "to": "gateway",
+     "label": {
+      "pt": "HTTPS",
+      "en": "HTTPS"
+     }
+    },
+    {
+     "from": "desktop",
+     "to": "gateway",
+     "label": {
+      "pt": "HTTPS / REST",
+      "en": "HTTPS / REST"
+     }
+    },
+    {
+     "from": "gateway",
+     "to": "api",
+     "label": null
+    },
+    {
+     "from": "api",
+     "to": "db",
+     "label": {
+      "pt": "leitura e escrita assíncronas",
+      "en": "async reads and writes"
+     }
+    },
+    {
+     "from": "api",
+     "to": "pdf",
+     "label": {
+      "pt": "gera",
+      "en": "generates"
+     }
+    }
+   ]
+  },
+  "decisions": [
+   {
+    "title": {
+     "pt": "Camada de dados assíncrona",
+     "en": "Asynchronous data layer"
+    },
+    "why": {
+     "pt": "Usei FastAPI com Asyncpg e SQLAlchemy 2.0 para atender validações de licença concorrentes vindas dos clientes desktop sem bloquear threads durante I/O.",
+     "en": "I used FastAPI with Asyncpg and SQLAlchemy 2.0 to serve concurrent license validations from desktop clients without blocking threads during I/O."
+    },
+    "tradeoff": null
+   },
+   {
+    "title": {
+     "pt": "Cliente Windows compilado com flags de otimização do .NET 8",
+     "en": "Windows client built with .NET 8 optimization flags"
+    },
+    "why": {
+     "pt": "Compilei com PublishReadyToRun, TieredPGO e ServerGarbageCollection=false para gerar um executável autocontido, com menor tempo de inicialização a frio e menos memória que um app WPF padrão.",
+     "en": "I build with PublishReadyToRun, TieredPGO and ServerGarbageCollection=false to produce a self-contained executable with lower cold start time and less memory than a standard WPF app."
+    },
+    "tradeoff": null
+   },
+   {
+    "title": {
+     "pt": "Validação espelhada entre Pydantic e Zod",
+     "en": "Validation mirrored between Pydantic and Zod"
+    },
+    "why": {
+     "pt": "O backend valida os payloads com Pydantic e o console repete a validação no cliente com Zod e React Hook Form. Isso garante integridade antes do envio e barra requisições malformadas antes da API.",
+     "en": "The backend validates payloads with Pydantic and the console mirrors it client-side with Zod and React Hook Form. That ensures integrity before transmission and stops malformed requests before the API."
+    },
+    "tradeoff": null
+   }
+  ],
+  "numbers": [
+   {
+    "label": {
+     "pt": "Versão do .NET do cliente desktop",
+     "en": "Desktop client .NET version"
+    },
+    "value": ".NET 8",
+    "source": "README.md"
+   },
+   {
+    "label": {
+     "pt": "Versão do Next.js",
+     "en": "Next.js version"
+    },
+    "value": "14",
+    "source": "README.md"
+   },
+   {
+    "label": {
+     "pt": "Versão do SQLAlchemy",
+     "en": "SQLAlchemy version"
+    },
+    "value": "2.0",
+    "source": "README.md"
+   }
+  ],
+  "sources": [
+   "6ID/README.md"
+  ]
+ },
  "sentinel": {
   "oneLiner": {
    "pt": "Firewall de bots que escrevi em Cloudflare Workers: cada requisição recebe uma pontuação de 0 a 100 com sinais do plano gratuito, e o rate limit por IP encolhe conforme a suspeita aumenta.",
@@ -1097,686 +1502,6 @@
    "realscan/src/reports.js",
    "realscan/src/config.js",
    "realscan/tests/*.test.js"
-  ]
- },
- "tesstrade": {
-  "oneLiner": {
-   "pt": "Plataforma de trading algorítmico que junta rede social, ambiente de desenvolvimento quantitativo no navegador e engine de backtesting em Rust.",
-   "en": "An algorithmic trading platform that combines social features, an in-browser quantitative development environment and a Rust backtesting engine."
-  },
-  "architecture": {
-   "nodes": [
-    {
-     "id": "workspace",
-     "label": {
-      "pt": "Workspace do trader",
-      "en": "Trader workspace"
-     },
-     "sub": {
-      "pt": "React, Vite, Zustand",
-      "en": "React, Vite, Zustand"
-     },
-     "col": 0,
-     "row": 0
-    },
-    {
-     "id": "editor",
-     "label": {
-      "pt": "IDE e gráficos",
-      "en": "IDE and charts"
-     },
-     "sub": {
-      "pt": "Monaco, Three.js, D3",
-      "en": "Monaco, Three.js, D3"
-     },
-     "col": 0,
-     "row": 1
-    },
-    {
-     "id": "gateway",
-     "label": {
-      "pt": "API Gateway",
-      "en": "API Gateway"
-     },
-     "sub": {
-      "pt": "Traefik",
-      "en": "Traefik"
-     },
-     "col": 1,
-     "row": 0
-    },
-    {
-     "id": "clerk",
-     "label": {
-      "pt": "Clerk",
-      "en": "Clerk"
-     },
-     "sub": {
-      "pt": "autenticação e sessão",
-      "en": "authentication and sessions"
-     },
-     "col": 1,
-     "row": 1
-    },
-    {
-     "id": "api",
-     "label": {
-      "pt": "Core API",
-      "en": "Core API"
-     },
-     "sub": {
-      "pt": "Rust, Axum",
-      "en": "Rust, Axum"
-     },
-     "col": 2,
-     "row": 0
-    },
-    {
-     "id": "python",
-     "label": {
-      "pt": "Sandbox Python",
-      "en": "Python sandbox"
-     },
-     "sub": {
-      "pt": "indicadores escritos pelo usuário",
-      "en": "user-authored indicators"
-     },
-     "col": 3,
-     "row": 0
-    },
-    {
-     "id": "db",
-     "label": {
-      "pt": "TimescaleDB",
-      "en": "TimescaleDB"
-     },
-     "sub": {
-      "pt": "séries temporais em PostgreSQL",
-      "en": "PostgreSQL time series"
-     },
-     "col": 3,
-     "row": 1
-    },
-    {
-     "id": "redis",
-     "label": {
-      "pt": "Redis",
-      "en": "Redis"
-     },
-     "sub": {
-      "pt": "PubSub",
-      "en": "PubSub"
-     },
-     "col": 3,
-     "row": 2
-    }
-   ],
-   "edges": [
-    {
-     "from": "workspace",
-     "to": "editor",
-     "label": null
-    },
-    {
-     "from": "workspace",
-     "to": "gateway",
-     "label": {
-      "pt": "HTTPS / WSS",
-      "en": "HTTPS / WSS"
-     }
-    },
-    {
-     "from": "workspace",
-     "to": "clerk",
-     "label": {
-      "pt": "autenticação",
-      "en": "authentication"
-     }
-    },
-    {
-     "from": "gateway",
-     "to": "api",
-     "label": null
-    },
-    {
-     "from": "api",
-     "to": "python",
-     "label": {
-      "pt": "RPC",
-      "en": "RPC"
-     }
-    },
-    {
-     "from": "api",
-     "to": "db",
-     "label": {
-      "pt": "leitura e escrita",
-      "en": "reads and writes"
-     }
-    },
-    {
-     "from": "api",
-     "to": "redis",
-     "label": {
-      "pt": "computação",
-      "en": "compute"
-     }
-    }
-   ]
-  },
-  "decisions": [
-   {
-    "title": {
-     "pt": "Camada de execução migrada para Rust",
-     "en": "Execution layer migrated to Rust"
-    },
-    "why": {
-     "pt": "Simulações paralelas exigiam processar séries históricas em vários núcleos. Migrei para uma arquitetura multithread em Rust para evitar a limitação de thread única do Node.js e o GIL do Python.",
-     "en": "Parallel simulations required processing historical datasets across multiple cores. I moved to a multithreaded Rust architecture to avoid Node.js single-thread limits and the Python GIL."
-    },
-    "tradeoff": null
-   },
-   {
-    "title": {
-     "pt": "Indicadores em Python num sandbox, ligados à engine",
-     "en": "Python indicators in a sandbox, wired to the engine"
-    },
-    "why": {
-     "pt": "O usuário escreve o indicador no Monaco. O código vai para um worker Python isolado que valida a lógica e envia a saída para a engine Rust simular, via FFI/RPC.",
-     "en": "Users write indicators in Monaco. The code goes to an isolated Python worker that validates the logic and streams output to the Rust engine for simulation, via FFI/RPC."
-    },
-    "tradeoff": null
-   },
-   {
-    "title": {
-     "pt": "Zustand com componentes atômicos no workspace",
-     "en": "Zustand with atomic components in the workspace"
-    },
-    "why": {
-     "pt": "Usei Zustand com componentes atômicos para evitar re-renderizações em cascata do React enquanto chegam ticks em alta frequência, num layout em grade redimensionável com gráficos, editores e livro de ofertas.",
-     "en": "I used Zustand with atomic components to prevent cascading React re-renders while high-frequency ticks arrive, in a resizable grid of charts, editors and order books."
-    },
-    "tradeoff": null
-   }
-  ],
-  "numbers": [
-   {
-    "label": {
-     "pt": "Versão do React",
-     "en": "React version"
-    },
-    "value": "18",
-    "source": "README.md"
-   }
-  ],
-  "sources": [
-   "TessTrade/README.md"
-  ]
- },
- "6id": {
-  "oneLiner": {
-   "pt": "Ecossistema para gerenciar licenças, autenticar usuários e administrar plataformas de trading, com API central, console web e cliente desktop para Windows.",
-   "en": "An ecosystem to manage licenses, authenticate users and administer trading platforms, with a central API, a web console and a Windows desktop client."
-  },
-  "architecture": {
-   "nodes": [
-    {
-     "id": "web",
-     "label": {
-      "pt": "Console web",
-      "en": "Web console"
-     },
-     "sub": {
-      "pt": "Next.js 14 (App Router), React 18",
-      "en": "Next.js 14 (App Router), React 18"
-     },
-     "col": 0,
-     "row": 0
-    },
-    {
-     "id": "desktop",
-     "label": {
-      "pt": "Cliente desktop",
-      "en": "Desktop client"
-     },
-     "sub": {
-      "pt": "WPF, .NET 8, MVVM",
-      "en": "WPF, .NET 8, MVVM"
-     },
-     "col": 0,
-     "row": 1
-    },
-    {
-     "id": "gateway",
-     "label": {
-      "pt": "API Gateway",
-      "en": "API Gateway"
-     },
-     "sub": {
-      "pt": "load balancer",
-      "en": "load balancer"
-     },
-     "col": 1,
-     "row": 0
-    },
-    {
-     "id": "api",
-     "label": {
-      "pt": "Core API",
-      "en": "Core API"
-     },
-     "sub": {
-      "pt": "FastAPI, SQLAlchemy 2.0, Pydantic",
-      "en": "FastAPI, SQLAlchemy 2.0, Pydantic"
-     },
-     "col": 2,
-     "row": 0
-    },
-    {
-     "id": "db",
-     "label": {
-      "pt": "PostgreSQL",
-      "en": "PostgreSQL"
-     },
-     "sub": {
-      "pt": "Asyncpg, migrações Alembic",
-      "en": "Asyncpg, Alembic migrations"
-     },
-     "col": 3,
-     "row": 0
-    },
-    {
-     "id": "pdf",
-     "label": {
-      "pt": "Relatórios PDF",
-      "en": "PDF reports"
-     },
-     "sub": {
-      "pt": "ReportLab",
-      "en": "ReportLab"
-     },
-     "col": 3,
-     "row": 1
-    }
-   ],
-   "edges": [
-    {
-     "from": "web",
-     "to": "gateway",
-     "label": {
-      "pt": "HTTPS",
-      "en": "HTTPS"
-     }
-    },
-    {
-     "from": "desktop",
-     "to": "gateway",
-     "label": {
-      "pt": "HTTPS / REST",
-      "en": "HTTPS / REST"
-     }
-    },
-    {
-     "from": "gateway",
-     "to": "api",
-     "label": null
-    },
-    {
-     "from": "api",
-     "to": "db",
-     "label": {
-      "pt": "leitura e escrita assíncronas",
-      "en": "async reads and writes"
-     }
-    },
-    {
-     "from": "api",
-     "to": "pdf",
-     "label": {
-      "pt": "gera",
-      "en": "generates"
-     }
-    }
-   ]
-  },
-  "decisions": [
-   {
-    "title": {
-     "pt": "Camada de dados assíncrona",
-     "en": "Asynchronous data layer"
-    },
-    "why": {
-     "pt": "Usei FastAPI com Asyncpg e SQLAlchemy 2.0 para atender validações de licença concorrentes vindas dos clientes desktop sem bloquear threads durante I/O.",
-     "en": "I used FastAPI with Asyncpg and SQLAlchemy 2.0 to serve concurrent license validations from desktop clients without blocking threads during I/O."
-    },
-    "tradeoff": null
-   },
-   {
-    "title": {
-     "pt": "Cliente Windows compilado com flags de otimização do .NET 8",
-     "en": "Windows client built with .NET 8 optimization flags"
-    },
-    "why": {
-     "pt": "Compilei com PublishReadyToRun, TieredPGO e ServerGarbageCollection=false para gerar um executável autocontido, com menor tempo de inicialização a frio e menos memória que um app WPF padrão.",
-     "en": "I build with PublishReadyToRun, TieredPGO and ServerGarbageCollection=false to produce a self-contained executable with lower cold start time and less memory than a standard WPF app."
-    },
-    "tradeoff": null
-   },
-   {
-    "title": {
-     "pt": "Validação espelhada entre Pydantic e Zod",
-     "en": "Validation mirrored between Pydantic and Zod"
-    },
-    "why": {
-     "pt": "O backend valida os payloads com Pydantic e o console repete a validação no cliente com Zod e React Hook Form. Isso garante integridade antes do envio e barra requisições malformadas antes da API.",
-     "en": "The backend validates payloads with Pydantic and the console mirrors it client-side with Zod and React Hook Form. That ensures integrity before transmission and stops malformed requests before the API."
-    },
-    "tradeoff": null
-   }
-  ],
-  "numbers": [
-   {
-    "label": {
-     "pt": "Versão do .NET do cliente desktop",
-     "en": "Desktop client .NET version"
-    },
-    "value": ".NET 8",
-    "source": "README.md"
-   },
-   {
-    "label": {
-     "pt": "Versão do Next.js",
-     "en": "Next.js version"
-    },
-    "value": "14",
-    "source": "README.md"
-   },
-   {
-    "label": {
-     "pt": "Versão do SQLAlchemy",
-     "en": "SQLAlchemy version"
-    },
-    "value": "2.0",
-    "source": "README.md"
-   }
-  ],
-  "sources": [
-   "6ID/README.md"
-  ]
- },
- "dotfiles-bspwm": {
-  "oneLiner": {
-   "pt": "Meus dotfiles de um desktop bspwm no Arch Linux, com a estrutura espelhando o $HOME e um instalador em Bash que cria os symlinks com backup, dry-run opcional e suporte a GNU Stow.",
-   "en": "My dotfiles for a bspwm desktop on Arch Linux, laid out as a mirror of $HOME, with a Bash installer that creates the symlinks with backups, optional dry-run and GNU Stow support."
-  },
-  "architecture": {
-   "nodes": [
-    {
-     "id": "repo",
-     "label": {
-      "pt": "Repositório",
-      "en": "Repository"
-     },
-     "sub": {
-      "pt": "espelha o $HOME; listas pacman e AUR",
-      "en": "mirrors $HOME; pacman and AUR lists"
-     },
-     "col": 0,
-     "row": 0
-    },
-    {
-     "id": "setup",
-     "label": {
-      "pt": "setup.sh",
-      "en": "setup.sh"
-     },
-     "sub": {
-      "pt": "ln -sfn por item, --dry-run, --uninstall",
-      "en": "per-item ln -sfn, --dry-run, --uninstall"
-     },
-     "col": 1,
-     "row": 0
-    },
-    {
-     "id": "stow",
-     "label": {
-      "pt": "GNU Stow",
-      "en": "GNU Stow"
-     },
-     "sub": {
-      "pt": "--stow, com .stow-local-ignore",
-      "en": "--stow, with .stow-local-ignore"
-     },
-     "col": 1,
-     "row": 1
-    },
-    {
-     "id": "home",
-     "label": {
-      "pt": "$HOME",
-      "en": "$HOME"
-     },
-     "sub": {
-      "pt": "21 itens linkados",
-      "en": "21 linked items"
-     },
-     "col": 2,
-     "row": 0
-    },
-    {
-     "id": "backup",
-     "label": {
-      "pt": "Backup",
-      "en": "Backup"
-     },
-     "sub": {
-      "pt": "~/.dotfiles-backup-AAAAMMDD-HHMMSS",
-      "en": "~/.dotfiles-backup-YYYYMMDD-HHMMSS"
-     },
-     "col": 2,
-     "row": 1
-    },
-    {
-     "id": "bspwm",
-     "label": {
-      "pt": "Sessão bspwm",
-      "en": "bspwm session"
-     },
-     "sub": {
-      "pt": "bspwmrc sobe sxhkd, feh, picom, polybar, dunst, greenclip",
-      "en": "bspwmrc starts sxhkd, feh, picom, polybar, dunst, greenclip"
-     },
-     "col": 3,
-     "row": 0
-    },
-    {
-     "id": "apps",
-     "label": {
-      "pt": "Componentes",
-      "en": "Components"
-     },
-     "sub": {
-      "pt": "picom glx + dual_kawase, rofi, ghostty, zsh + starship",
-      "en": "picom glx + dual_kawase, rofi, ghostty, zsh + starship"
-     },
-     "col": 3,
-     "row": 1
-    }
-   ],
-   "edges": [
-    {
-     "from": "repo",
-     "to": "setup",
-     "label": null
-    },
-    {
-     "from": "repo",
-     "to": "stow",
-     "label": null
-    },
-    {
-     "from": "setup",
-     "to": "home",
-     "label": {
-      "pt": "symlinks",
-      "en": "symlinks"
-     }
-    },
-    {
-     "from": "setup",
-     "to": "backup",
-     "label": {
-      "pt": "conflitos movidos antes",
-      "en": "conflicts moved first"
-     }
-    },
-    {
-     "from": "stow",
-     "to": "home",
-     "label": {
-      "pt": "--restow",
-      "en": "--restow"
-     }
-    },
-    {
-     "from": "home",
-     "to": "bspwm",
-     "label": {
-      "pt": "login ou bspc wm -r",
-      "en": "login or bspc wm -r"
-     }
-    },
-    {
-     "from": "bspwm",
-     "to": "apps",
-     "label": {
-      "pt": "autostart",
-      "en": "autostart"
-     }
-    }
-   ]
-  },
-  "decisions": [
-   {
-    "title": {
-     "pt": "Falhas isoladas por item",
-     "en": "Per-item failure isolation"
-    },
-    "why": {
-     "pt": "O setup.sh roda com set -euo pipefail, mas chama cada link dentro de if !, para que uma falha seja registrada e o laço siga para o próximo item. No fim ele lista os itens que falharam e sai com erro.",
-     "en": "setup.sh runs under set -euo pipefail but calls each link inside if !, so a failure is recorded and the loop moves on. At the end it lists the failed items and exits non-zero."
-    },
-    "tradeoff": null
-   },
-   {
-    "title": {
-     "pt": "Backup em vez de sobrescrever",
-     "en": "Backup instead of overwrite"
-    },
-    "why": {
-     "pt": "Qualquer arquivo, diretório ou symlink alheio no destino é movido para um diretório de backup com timestamp antes do link, então dados do usuário nunca são sobrescritos no lugar. O --uninstall remove só os symlinks que apontam para o repositório e deixa os backups intactos.",
-     "en": "Any existing file, directory or foreign symlink at the target is moved to a timestamped backup directory before linking, so user data is never overwritten in place. --uninstall removes only symlinks pointing into the repo and leaves backups untouched."
-    },
-    "tradeoff": null
-   },
-   {
-    "title": {
-     "pt": "Idempotência com verificação do link",
-     "en": "Idempotency with link verification"
-    },
-    "why": {
-     "pt": "Itens que já apontam para o lugar certo são pulados. Depois de cada ln -sfn, o script confere com readlink -f se o link caiu no destino, para evitar surpresas de ln dentro de diretório.",
-     "en": "Items already pointing to the right place are skipped. After each ln -sfn the script checks with readlink -f that the link landed, to guard against ln-into-directory surprises."
-    },
-    "tradeoff": null
-   },
-   {
-    "title": {
-     "pt": "GNU Stow como caminho alternativo",
-     "en": "GNU Stow as an alternative path"
-    },
-    "why": {
-     "pt": "O --stow delega o link ao stow. O .stow-local-ignore mantém setup.sh, README e backups fora do $HOME, para que o resultado bata com a instalação normal.",
-     "en": "--stow hands linking to stow. .stow-local-ignore keeps setup.sh, README and backups out of $HOME, so the result matches the plain install."
-    },
-    "tradeoff": {
-     "pt": "No caminho do stow, conflitos são apenas reportados pelo próprio stow, sem o backup com timestamp.",
-     "en": "On the stow path, conflicts are only reported by stow itself, without the timestamped backup."
-    }
-   },
-   {
-    "title": {
-     "pt": "Segredos e histórico fora do git",
-     "en": "Secrets and history kept out of git"
-    },
-    "why": {
-     "pt": "O .gitignore exclui chaves (SSH, GPG, PEM), arquivos .env, configs de sops, stripe e atuin, e históricos de shell; o .gitconfig publicado usa nome e e-mail de exemplo. No .zshrc, ferramentas opcionais ficam atrás de command -v para o shell carregar mesmo sem elas.",
-     "en": ".gitignore excludes keys (SSH, GPG, PEM), .env files, sops, stripe and atuin configs, and shell history; the published .gitconfig uses placeholder name and email. In .zshrc, optional tools sit behind command -v so the shell loads even without them."
-    },
-    "tradeoff": null
-   }
-  ],
-  "numbers": [
-   {
-    "label": {
-     "pt": "Itens linkados pelo instalador",
-     "en": "Items linked by the installer"
-    },
-    "value": "21",
-    "source": "setup.sh"
-   },
-   {
-    "label": {
-     "pt": "Pacotes dos repositórios oficiais",
-     "en": "Official repo packages"
-    },
-    "value": "35",
-    "source": "packages/pacman.txt"
-   },
-   {
-    "label": {
-     "pt": "Pacotes do AUR",
-     "en": "AUR packages"
-    },
-    "value": "4",
-    "source": "packages/aur.txt"
-   },
-   {
-    "label": {
-     "pt": "Monitor configurado",
-     "en": "Configured display"
-    },
-    "value": "DP-2, 2560x1440 a 165 Hz / DP-2, 2560x1440 at 165 Hz",
-    "source": ".config/bspwm/bspwmrc, README.md"
-   },
-   {
-    "label": {
-     "pt": "Desktops do bspwm",
-     "en": "bspwm desktops"
-    },
-    "value": "10",
-    "source": ".config/bspwm/bspwmrc"
-   },
-   {
-    "label": {
-     "pt": "Backend e blur do picom",
-     "en": "picom backend and blur"
-    },
-    "value": "glx, dual_kawase, vsync",
-    "source": ".config/picom/picom.conf"
-   }
-  ],
-  "sources": [
-   "dotfiles-bspwm/README.md",
-   "dotfiles-bspwm/setup.sh",
-   "dotfiles-bspwm/.gitignore",
-   "dotfiles-bspwm/.stow-local-ignore",
-   "dotfiles-bspwm/packages/pacman.txt",
-   "dotfiles-bspwm/packages/aur.txt",
-   "dotfiles-bspwm/.config/bspwm/bspwmrc",
-   "dotfiles-bspwm/.config/picom/picom.conf",
-   "dotfiles-bspwm/.config/qt5ct/qt5ct.conf",
-   "dotfiles-bspwm/.zshrc"
   ]
  }
 }

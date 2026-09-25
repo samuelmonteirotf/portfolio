@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useRef } from "react"
 import { motion, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "motion/react"
@@ -86,6 +87,12 @@ function ChapterText({
               </div>
             ))}
           </dl>
+
+          {project.image ? (
+            <div className="relative mt-6 hidden aspect-[2/1] overflow-hidden rounded-lg border border-border lg:block">
+              <Image src={project.image.src} alt={project.image.alt} fill sizes="480px" className="object-cover object-top" />
+            </div>
+          ) : null}
 
           <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
             <Link

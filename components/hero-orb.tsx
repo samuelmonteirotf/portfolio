@@ -18,7 +18,6 @@ import { ORB_PULSE, type PulseDetail } from "@/lib/orb-bus"
  *                  realscan  radar varrendo e acendendo alvos
  *                  tesstrade leque de Monte Carlo
  *                  6id       três nós trocando pacotes
- *                  dotfiles  janelas do bspwm lado a lado, foco passeando
  *  depois      → dissolvem; o resto da página fica limpo.
  *
  * Tudo sem estado: cada formação é uma função (partícula, tempo) → posição, e
@@ -44,14 +43,13 @@ const F_WORD = 1
 const F_SCATTER = 8
 // skills: as partículas escrevem o nome (data-word) no palco da direita
 const SCENE: Record<string, number> = { dust: 9, skills: 1, traffic: 12, timeline: 13, orb: 14 }
-const FIG: Record<string, number> = { sentinel: 2, aegis: 3, realscan: 4, tesstrade: 5, "6id": 6, "dotfiles-bspwm": 7 }
+const FIG: Record<string, number> = { sentinel: 2, aegis: 3, realscan: 4, tesstrade: 5, "6id": 6 }
 const WORD: Record<string, string> = {
   sentinel: "SENTINEL",
   aegis: "AEGIS",
   realscan: "REALSCAN",
   tesstrade: "TESSTRADE",
   "6id": "6ID",
-  "dotfiles-bspwm": "DOTFILES",
 }
 
 const VERT = /* glsl */ `
@@ -239,33 +237,6 @@ vec4 fig6id(vec2 hm, vec4 r, float t) {
   return vec4(mix(a, b, s), 1.0, 0.0);
 }
 
-// dotfiles: layout em tiles do bspwm; o foco passeia entre as janelas
-vec4 tile(float i) {
-  if (i < 0.5) return vec4(-0.92, -0.72, 0.04, 0.72);
-  if (i < 1.5) return vec4(0.1, 0.1, 0.92, 0.72);
-  if (i < 2.5) return vec4(0.1, -0.72, 0.48, 0.04);
-  if (i < 3.5) return vec4(0.54, -0.72, 0.92, -0.36);
-  return vec4(0.54, -0.3, 0.92, 0.04);
-}
-vec4 figDotfiles(vec2 hm, vec4 r, float t) {
-  float i = floor(hm.y * 5.0);
-  vec4 b = tile(i);
-  float focus = floor(mod(t * 0.45, 5.0));
-  float on = 1.0 - step(0.5, abs(i - focus));
-  if (r.z > 0.86) {
-    // linhas de "texto" dentro da janela em foco
-    vec4 f = tile(focus);
-    float ln = floor(hm.x * 7.0);
-    float y = f.w - 0.1 - ln * (f.w - f.y - 0.16) / 7.0;
-    float x = f.x + 0.06 + fract(hm.x * 7.0) * (f.z - f.x - 0.12) * (0.4 + hash(ln + focus) * 0.6);
-    return vec4(x, y, 0.55, 0.0);
-  }
-  float w = b.z - b.x, h = b.w - b.y, per = 2.0 * (w + h);
-  float d = fract(hm.x + t * 0.02) * per;
-  vec2 p = d < w ? vec2(b.x + d, b.y) : (d < w + h ? vec2(b.z, b.y + d - w) : (d < 2.0 * w + h ? vec2(b.z - (d - w - h), b.w) : vec2(b.x, b.w - (d - 2.0 * w - h))));
-  return vec4(p, 0.3 + on * 0.7, 0.0);
-}
-
 /* ---------------- cenas do resto da página ---------------- */
 
 // sala de controle: o tráfego real do Sentinel. Tudo entra pela esquerda,
@@ -337,8 +308,7 @@ vec4 figure(int k, vec2 hm, vec4 r, float t) {
   if (k == 3) return figAegis(hm, r, t);
   if (k == 4) return figRealscan(hm, r, t);
   if (k == 5) return figTesstrade(hm, r, t);
-  if (k == 6) return fig6id(hm, r, t);
-  return figDotfiles(hm, r, t);
+  return fig6id(hm, r, t);
 }
 
 vec2 stage(vec2 q, vec3 st) { return st.xy + vec2(q.x, -q.y) * st.z; }

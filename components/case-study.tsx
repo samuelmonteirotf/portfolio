@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react"
 import { LanguageProvider, useContent, useLanguage } from "@/components/language"
@@ -121,6 +122,15 @@ function Body({ slug }: { slug: string }) {
               </a>
             ) : null}
           </div>
+          {project.image ? (
+            <figure className="mt-10">
+              <div className="relative aspect-[1600/790] overflow-hidden rounded-lg border border-border">
+                <Image src={project.image.src} alt={project.image.alt} fill priority sizes="(min-width: 896px) 848px, 100vw" className="object-cover object-top" />
+              </div>
+              <figcaption className="mt-2 font-mono text-[11px] text-muted-foreground">{project.image.alt}</figcaption>
+            </figure>
+          ) : null}
+
           <div className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-3">
             {project.impact.map((item) => (
               <div key={item.label} className="bg-card p-4">

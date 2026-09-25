@@ -12,6 +12,7 @@ import { LanguageProvider } from "@/components/language"
 import { ScrollSpine } from "@/components/motion/reveal"
 import { Terminal } from "@/components/terminal"
 import { HeroOrb } from "@/components/hero-orb"
+import { QuickNav } from "@/components/quick-nav"
 
 export default function Page() {
   return (
@@ -25,6 +26,7 @@ export default function Page() {
           <HeroOrb />
         </div>
         <SiteHeader />
+        <QuickNav />
         {/* projetos primeiro: capítulos de tela cheia onde as partículas
             escrevem o nome e desenham a figura de cada projeto */}
         <ProjectChapters />
