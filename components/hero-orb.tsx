@@ -86,6 +86,10 @@ uniform float uFuse;  // fusão no roxo: 0 = azul e vermelho lado a lado, 1 = ro
 uniform vec2 uFuseC;  // o centro gravitacional (entre os dois)
 uniform float uFuseR; // raio da esfera roxa que se forma ali
 uniform vec3 uFuseCol;
+uniform vec2 uFC0; uniform vec2 uFC1; // centros das esferas orbitando na aproximação
+uniform float uShrink; // as esferas encolhem ao se aproximar
+uniform float uFuseA;  // progresso da aproximação (0..1)
+uniform float uFlash;  // clarão da colisão
 uniform vec4 uPA;     // parâmetros da cena A: (p1, p2, progresso, alfa)
 uniform vec4 uPB;     // idem B
 
@@ -122,7 +126,11 @@ vec3 plasma(vec3 d, vec4 r, float t) {
 const float CORE = 0.34;
 vec3 hollow(vec3 d, vec4 r, float t) {
   if (r.z < CORE) return plasma(d, r, t) * 0.42;
-  return d * (0.965 + 0.035 * r.w) * (1.0 + 0.018 * sin(t * 1.4));
+  // casca instável: cada latitude gira num ritmo, a energia revolve em vez de parada
+  float a = sin(d.y * 3.0 + t * 1.3) * 0.35 + t * 0.45 * (1.0 + d.y * 0.6);
+  float ca = cos(a), sa = sin(a);
+  vec3 q = vec3(d.x * ca - d.z * sa, d.y, d.x * sa + d.z * ca);
+  return q * (0.965 + 0.035 * r.w) * (1.0 + 0.03 * sin(t * 2.3 + r.w * 12.0));
 }
 
 /* ---------------- figuras dos projetos ----------------
@@ -375,43 +383,44 @@ void main() {
   float orbB = (0.22 + 0.78 * depth) * pf * uGain;
   float sizeR = uR;
 
-  /* Fusão no roxo: o ponto entre as duas esferas vira um poço gravitacional.
-   * Cada partícula é capturada no seu tempo, cai em espiral (azul num
-   * sentido, vermelho no outro, entrelaçando), aquece na queda e assenta na
-   * casca roxa. Em f = 1 a posição, a cor e o brilho são exatamente os da
-   * esfera roxa parada: a CPU troca para ela sem salto. */
+  /* Vazio Roxo. Azul (atração) e vermelho (repulsão) são trazidos um contra o
+   * outro: as duas esferas, inteiras e encolhendo, orbitam cada vez mais
+   * rápido até colidir no centro (uFC0/uFC1 vêm da CPU). No impacto, um clarão
+   * e uma onda de choque jogam a energia para fora; ela se reorganiza na
+   * esfera roxa instável. Em uFuse = 1 posição, cor e brilho são exatamente
+   * os da esfera roxa parada: a CPU troca para ela sem salto. */
   if (uFuse > 0.0) {
-    float t0 = aRand.y * 0.62;
-    float f = clamp((uFuse - t0) / 0.38, 0.0, 1.0);
-    float e = f * f * (3.0 - 2.0 * f);
+    vec2 fcg = g1 ? uFC1 : uFC0;
+    vec2 pre = fcg + (orbPx - c) * uShrink;
+
     vec3 q = hollow(aDir, aRand, uTime);
     q = vec3(q.x * ca - q.z * sa, q.y, q.x * sa + q.z * ca);
     q = vec3(q.x, q.y * tc - q.z * ts, q.y * ts + q.z * tc);
     vec2 target = uFuseC + vec2(q.x, -q.y) * uFuseR;
-    vec2 rel0 = orbPx - uFuseC, rel1 = target - uFuseC;
-    float a0 = atan(rel0.y, rel0.x), a1 = atan(rel1.y, rel1.x);
-    float da = a1 - a0;
-    da -= 6.2831853 * floor((da + 3.1415927) / 6.2831853);
-    // uma volta inteira de espiral (termina no mesmo ângulo do alvo)
-    float turn = (g1 ? -1.0 : 1.0) * 6.2831853;
-    float ang2 = a0 + (da + turn) * e;
-    // cai acelerando e mergulha perto do centro antes de subir para a casca
-    float rad = mix(length(rel0), length(rel1), e) * (1.0 - 0.6 * sin(f * 3.1415927));
-    orbPx = uFuseC + rad * vec2(cos(ang2), sin(ang2));
+
+    float e2 = smoothstep(0.5 + aRand.y * 0.18, 0.97, uFuse);
+    float bt = clamp((uFuse - 0.46) / 0.32, 0.0, 1.0);
+    float burst = sin(bt * 3.1415927) * (0.35 + aRand.w * 1.1);
+    vec2 dirT = normalize(target - uFuseC + vec2(1e-4, 0.0));
+    orbPx = mix(pre, target, e2) + dirT * burst * uFuseR * 0.9;
 
     float depthQ = clamp(0.5 + q.z * 0.4, 0.0, 1.0);
     float coreQ = step(aRand.z, CORE);
     float pfQ = mix(1.0, (1.0 - smoothstep(0.72, 1.0, flow)) * (0.6 + 0.9 * (1.0 - flow)), coreQ);
     float orbBq = (0.22 + 0.78 * depthQ) * pfQ * uGain;
-    float heat = sin(f * 3.1415927);
-    orbB = mix(orbB, orbBq, e) * (1.0 + heat * 1.1);
-    depth = mix(depth, depthQ, e);
-    sizeR = mix(uR, uFuseR, e);
-    col = mix(col, uFuseCol, smoothstep(0.3, 1.0, f));
-    col = mix(col, vec3(1.0), heat * 0.35);
-    sty = mix(sty, vec3(0.0, 0.0, 1.0), e);
-    core = mix(core, coreQ, e);
+    orbB = mix(orbB * (1.0 + uFuseA * 0.9), orbBq, e2) * (1.0 + uFlash * 1.5 + burst * 0.5);
+    depth = mix(depth, depthQ, e2);
+    sizeR = mix(uR * uShrink, uFuseR, e2) * (1.0 + uFlash * 0.5);
+    col = mix(col, vec3(1.0), uFuseA * 0.12);
+    col = mix(col, uFuseCol, smoothstep(0.45, 0.72, uFuse));
+    col = mix(col, vec3(1.0, 0.9, 1.0), clamp(uFlash + burst * 0.45, 0.0, 1.0));
+    sty = mix(sty, vec3(0.0, 0.0, 1.0), e2);
+    core = mix(core, coreQ, e2);
   }
+
+  // o roxo formado crepita: faíscas curtas na casca
+  float spark = pow(0.5 + 0.5 * sin(uTime * 9.0 + aRand.w * 40.0), 10.0);
+  orbB *= mix(1.0, 0.75 + 1.4 * spark, sty.z * (1.0 - core));
 
   // as duas formações vizinhas e a mistura
   vec2 pA, pB; float bA, bB, aA, aB;
@@ -708,7 +717,7 @@ export function HeroOrb() {
       Object.fromEntries(names.map((n) => [n, gl.getUniformLocation(p, n)])) as Record<string, WebGLUniformLocation | null>
     const up = U(prog, [
       "uRes", "uDpr", "uTime", "uAngle", "uC0", "uC1", "uCol0", "uCol1", "uSty0", "uSty1", "uR",
-      "uDisp", "uSeed", "uMouse", "uGain", "uPulse", "uPulseCol", "uTypeA", "uTypeB", "uMix", "uStageA", "uStageB", "uPA", "uPB", "uFuse", "uFuseC", "uFuseR", "uFuseCol",
+      "uDisp", "uSeed", "uMouse", "uGain", "uPulse", "uPulseCol", "uTypeA", "uTypeB", "uMix", "uStageA", "uStageB", "uPA", "uPB", "uFuse", "uFuseC", "uFuseR", "uFuseCol", "uFC0", "uFC1", "uShrink", "uFuseA", "uFlash",
     ])
     const uh = U(halo, ["uBox", "uRes", "uDpr", "uC0", "uC1", "uCol0", "uCol1", "uR", "uForm"])
 
@@ -1004,6 +1013,17 @@ export function HeroOrb() {
           }
         } else if (t > 0) fuse = t
       }
+      // aproximação: órbita que acelera e fecha até a colisão (fuse ≈ 0.46)
+      const fa = smoothstep(0, 0.45, fuse)
+      const fa2 = fa * fa
+      const fAng = fa2 * Math.PI * 2 * 1.25
+      const fDist = 1 - fa2
+      const fC: [number, number] = [P.c[0][0], P.c[0][1] - sy]
+      const fcs = gc.map(([x, y]) => {
+        const dx = (x - fC[0]) * fDist, dy = (y - fC[1]) * fDist
+        return [fC[0] + dx * Math.cos(fAng) - dy * Math.sin(fAng), fC[1] + dx * Math.sin(fAng) + dy * Math.cos(fAng)]
+      })
+      const flash = fuse > 0 ? Math.exp(-(((fuse - 0.47) / 0.045) ** 2)) : 0
 
       // legenda do hero some assim que a rolagem começa
       if (header) header.style.setProperty("--orb-caption-o", clamp01(1 - sy / (heroH * 0.15)).toFixed(2))
@@ -1059,7 +1079,11 @@ export function HeroOrb() {
 
       // em trânsito (formações diferentes, mistura no meio) ou dispersando:
       // véu parcial = rastro; parado: limpa tudo e a forma fica nítida
-      const moving = (typeA !== typeB || S.A.word !== S.B.word ? Math.sin(S.mix * Math.PI) : 0) * (reduce ? 0 : 1)
+      const moving = Math.max(
+        (typeA !== typeB || S.A.word !== S.B.word ? Math.sin(S.mix * Math.PI) : 0) * (reduce ? 0 : 1),
+        // rastro das esferas em órbita e da onda de choque
+        fuse > 0 && fuse < 0.85 ? 0.85 * orbShare : 0,
+      )
       const veilPer60 = Math.min(1, 1 - 0.72 * Math.max(moving, disp * 0.6))
       if (veilPer60 > 0.98) {
         gl!.clearColor(3 / 255, 3 / 255, 3 / 255, 1)
@@ -1079,12 +1103,11 @@ export function HeroOrb() {
       gl!.blendFunc(gl!.ONE, gl!.ONE)
 
       if (orbShare > 0.01) {
-        // na fusão o brilho migra para o centro e fica roxo junto com as partículas
-        const fc: [number, number] = [P.c[0][0], P.c[0][1] - sy]
-        const fz = fuse * fuse
-        const hc = gc.map(([x, y]) => [x + (fc[0] - x) * fz, y + (fc[1] - y) * fz])
-        const hcol = gcol.map((c) => c.map((v, q) => v + (PURPLE[q] - v) * fuse))
-        const hR = gR + (P.R - gR) * fuse
+        // na fusão o brilho acompanha as esferas em órbita, acende no impacto e fica roxo
+        const hc = fuse > 0 ? fcs : gc
+        const toP = smoothstep(0.45, 0.72, fuse)
+        const hcol = gcol.map((c) => c.map((v, q) => v + (PURPLE[q] - v) * toP + (1 - v) * flash * 0.8))
+        const hR = fuse > 0 ? gR + (P.R - gR) * smoothstep(0.45, 0.97, fuse) : gR
         const hr = hR * 2.6
         gl!.useProgram(halo)
         gl!.bindBuffer(gl!.ARRAY_BUFFER, quad)
@@ -1098,7 +1121,7 @@ export function HeroOrb() {
         gl!.uniform3fv(uh.uCol0, hcol[0])
         gl!.uniform3fv(uh.uCol1, hcol[1])
         gl!.uniform1f(uh.uR, hR)
-        gl!.uniform1f(uh.uForm, (1 - disp) * orbShare)
+        gl!.uniform1f(uh.uForm, (1 - disp) * orbShare * (1 + flash * 1.6))
         gl!.drawArrays(gl!.TRIANGLE_STRIP, 0, 4)
         gl!.disableVertexAttribArray(A.pos)
       }
@@ -1143,6 +1166,11 @@ export function HeroOrb() {
       gl!.uniform2f(up.uFuseC, P.c[0][0], P.c[0][1] - sy)
       gl!.uniform1f(up.uFuseR, P.R)
       gl!.uniform3fv(up.uFuseCol, PURPLE)
+      gl!.uniform2f(up.uFC0, fcs[0][0], fcs[0][1])
+      gl!.uniform2f(up.uFC1, fcs[1][0], fcs[1][1])
+      gl!.uniform1f(up.uShrink, 1 - 0.35 * fa)
+      gl!.uniform1f(up.uFuseA, fa)
+      gl!.uniform1f(up.uFlash, flash)
 
       gl!.drawArrays(gl!.POINTS, 0, drawCount)
     }
