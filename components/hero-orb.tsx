@@ -35,8 +35,10 @@ const S_RED: V3 = [0, 1, 0]
 const S_PURPLE: V3 = [0, 0, 1]
 
 const DISPERSE_MS = 800 // SETTLE_MS do pill-mode depende disto
-// no roxo: azul e vermelho se formam lado a lado e só então se fundem
+// no roxo: azul e vermelho se formam lado a lado; em MERGE_MS o ponto entre
+// eles vira um poço gravitacional e as partículas caem ali durante FUSE_MS
 const MERGE_MS = 2900
+const FUSE_MS = 3600
 
 // tipos de formação (iguais no shader)
 const F_ORB = 0
@@ -80,6 +82,10 @@ uniform int uTypeB;
 uniform float uMix;
 uniform vec3 uStageA; // palco da formação A: centro x, centro y, meia-largura (px)
 uniform vec3 uStageB; // idem B (o nome fica no centro; a figura, à direita)
+uniform float uFuse;  // fusão no roxo: 0 = azul e vermelho lado a lado, 1 = roxo formado
+uniform vec2 uFuseC;  // o centro gravitacional (entre os dois)
+uniform float uFuseR; // raio da esfera roxa que se forma ali
+uniform vec3 uFuseCol;
 uniform vec4 uPA;     // parâmetros da cena A: (p1, p2, progresso, alfa)
 uniform vec4 uPB;     // idem B
 
@@ -367,6 +373,45 @@ void main() {
   float core = sty.z * step(aRand.z, CORE);
   float pf = mix(1.0, (1.0 - smoothstep(0.72, 1.0, flow)) * (0.6 + 0.9 * (1.0 - flow)), max(sty.y, core));
   float orbB = (0.22 + 0.78 * depth) * pf * uGain;
+  float sizeR = uR;
+
+  /* Fusão no roxo: o ponto entre as duas esferas vira um poço gravitacional.
+   * Cada partícula é capturada no seu tempo, cai em espiral (azul num
+   * sentido, vermelho no outro, entrelaçando), aquece na queda e assenta na
+   * casca roxa. Em f = 1 a posição, a cor e o brilho são exatamente os da
+   * esfera roxa parada: a CPU troca para ela sem salto. */
+  if (uFuse > 0.0) {
+    float t0 = aRand.y * 0.62;
+    float f = clamp((uFuse - t0) / 0.38, 0.0, 1.0);
+    float e = f * f * (3.0 - 2.0 * f);
+    vec3 q = hollow(aDir, aRand, uTime);
+    q = vec3(q.x * ca - q.z * sa, q.y, q.x * sa + q.z * ca);
+    q = vec3(q.x, q.y * tc - q.z * ts, q.y * ts + q.z * tc);
+    vec2 target = uFuseC + vec2(q.x, -q.y) * uFuseR;
+    vec2 rel0 = orbPx - uFuseC, rel1 = target - uFuseC;
+    float a0 = atan(rel0.y, rel0.x), a1 = atan(rel1.y, rel1.x);
+    float da = a1 - a0;
+    da -= 6.2831853 * floor((da + 3.1415927) / 6.2831853);
+    // uma volta inteira de espiral (termina no mesmo ângulo do alvo)
+    float turn = (g1 ? -1.0 : 1.0) * 6.2831853;
+    float ang2 = a0 + (da + turn) * e;
+    // cai acelerando e mergulha perto do centro antes de subir para a casca
+    float rad = mix(length(rel0), length(rel1), e) * (1.0 - 0.6 * sin(f * 3.1415927));
+    orbPx = uFuseC + rad * vec2(cos(ang2), sin(ang2));
+
+    float depthQ = clamp(0.5 + q.z * 0.4, 0.0, 1.0);
+    float coreQ = step(aRand.z, CORE);
+    float pfQ = mix(1.0, (1.0 - smoothstep(0.72, 1.0, flow)) * (0.6 + 0.9 * (1.0 - flow)), coreQ);
+    float orbBq = (0.22 + 0.78 * depthQ) * pfQ * uGain;
+    float heat = sin(f * 3.1415927);
+    orbB = mix(orbB, orbBq, e) * (1.0 + heat * 1.1);
+    depth = mix(depth, depthQ, e);
+    sizeR = mix(uR, uFuseR, e);
+    col = mix(col, uFuseCol, smoothstep(0.3, 1.0, f));
+    col = mix(col, vec3(1.0), heat * 0.35);
+    sty = mix(sty, vec3(0.0, 0.0, 1.0), e);
+    core = mix(core, coreQ, e);
+  }
 
   // as duas formações vizinhas e a mistura
   vec2 pA, pB; float bA, bB, aA, aB;
@@ -427,7 +472,7 @@ void main() {
   float orbness = mix(isOrbA, isOrbB, m);
   float wordness = mix(uTypeA == 1 ? 1.0 : 0.0, uTypeB == 1 ? 1.0 : 0.0, m);
   float sceneA = mix(uPA.w, uPB.w, m);
-  float orbSize = (1.6 + aRand.x * 2.2) * (0.7 + depth * 0.9) * clamp(uR / 190.0, 0.75, 1.35);
+  float orbSize = (1.6 + aRand.x * 2.2) * (0.7 + depth * 0.9) * clamp(sizeR / 190.0, 0.75, 1.35);
   float figSize = 1.3 + aRand.x * 1.2 + tr * 0.9;
   gl_PointSize = mix(figSize, orbSize, orbness) * uDpr;
   gl_Position = vec4(pos.x / uRes.x * 2.0 - 1.0, 1.0 - pos.y / uRes.y * 2.0, 0.0, 1.0);
@@ -663,7 +708,7 @@ export function HeroOrb() {
       Object.fromEntries(names.map((n) => [n, gl.getUniformLocation(p, n)])) as Record<string, WebGLUniformLocation | null>
     const up = U(prog, [
       "uRes", "uDpr", "uTime", "uAngle", "uC0", "uC1", "uCol0", "uCol1", "uSty0", "uSty1", "uR",
-      "uDisp", "uSeed", "uMouse", "uGain", "uPulse", "uPulseCol", "uTypeA", "uTypeB", "uMix", "uStageA", "uStageB", "uPA", "uPB",
+      "uDisp", "uSeed", "uMouse", "uGain", "uPulse", "uPulseCol", "uTypeA", "uTypeB", "uMix", "uStageA", "uStageB", "uPA", "uPB", "uFuse", "uFuseC", "uFuseR", "uFuseCol",
     ])
     const uh = U(halo, ["uBox", "uRes", "uDpr", "uC0", "uC1", "uCol0", "uCol1", "uR", "uForm"])
 
@@ -699,7 +744,7 @@ export function HeroOrb() {
       const off = Math.min(spread, R * 0.5)
       if (m === "fullstack") return { c: [[cx - off, cy], [cx - off, cy]], col: [BLUE, BLUE], sty: [S_BLUE, S_BLUE], R }
       if (m === "devops") return { c: [[cx + off, cy], [cx + off, cy]], col: [RED, RED], sty: [S_RED, S_RED], R }
-      if (since < MERGE_MS) {
+      if (since < MERGE_MS + FUSE_MS) {
         const split = R * 0.78
         return { c: [[cx - split, cy], [cx + split, cy]], col: [BLUE, RED], sty: [S_BLUE, S_RED], R: R * 0.62 }
       }
@@ -885,7 +930,10 @@ export function HeroOrb() {
     let seed = Math.random()
     let ang = 0, time = 0, last = performance.now(), raf = 0, idle = false
 
-    const gainFor = (n: number) => Math.min(1.4, 1.05 * Math.sqrt(18000 / n) * Math.pow(Math.max(gR, 60) / 200, 0.8))
+    // ganho pelo raio do hero (não pelo da esfera da vez): o brilho não salta
+    // quando azul/vermelho menores viram o roxo
+    const gainFor = (n: number) => Math.min(1.4, 1.05 * Math.sqrt(18000 / n) * Math.pow(Math.max(geo.R, 60) / 200, 0.8))
+    let fuseSnapped = false
 
     function frame(now: number) {
       raf = requestAnimationFrame(frame)
@@ -910,6 +958,7 @@ export function HeroOrb() {
 
       if (burstRef.current) {
         burstRef.current = false
+        fuseSnapped = false
         if (reduce) sinceChange = 99999
         else {
           sinceChange = 0
@@ -937,6 +986,24 @@ export function HeroOrb() {
         }
       }
       gR += (T.R - gR) * k
+
+      // fusão: 0..1 enquanto as partículas caem no centro; ao terminar, a
+      // esfera roxa parada assume exatamente onde o shader deixou (sem glide)
+      let fuse = 0
+      const P = heroLayout("all", 1e9)
+      if (m === "all" && !reduce) {
+        const t = (sinceChange - MERGE_MS) / FUSE_MS
+        if (t >= 1) {
+          if (!fuseSnapped) {
+            for (let g = 0; g < 2; g++) {
+              gc[g][0] = P.c[g][0]; gc[g][1] = P.c[g][1] - sy
+              for (let q = 0; q < 3; q++) { gcol[g][q] = P.col[g][q]; gsty[g][q] = P.sty[g][q] }
+            }
+            gR = P.R
+            fuseSnapped = true
+          }
+        } else if (t > 0) fuse = t
+      }
 
       // legenda do hero some assim que a rolagem começa
       if (header) header.style.setProperty("--orb-caption-o", clamp01(1 - sy / (heroH * 0.15)).toFixed(2))
@@ -1012,19 +1079,25 @@ export function HeroOrb() {
       gl!.blendFunc(gl!.ONE, gl!.ONE)
 
       if (orbShare > 0.01) {
-        const hr = gR * 2.6
+        // na fusão o brilho migra para o centro e fica roxo junto com as partículas
+        const fc: [number, number] = [P.c[0][0], P.c[0][1] - sy]
+        const fz = fuse * fuse
+        const hc = gc.map(([x, y]) => [x + (fc[0] - x) * fz, y + (fc[1] - y) * fz])
+        const hcol = gcol.map((c) => c.map((v, q) => v + (PURPLE[q] - v) * fuse))
+        const hR = gR + (P.R - gR) * fuse
+        const hr = hR * 2.6
         gl!.useProgram(halo)
         gl!.bindBuffer(gl!.ARRAY_BUFFER, quad)
         gl!.enableVertexAttribArray(A.pos)
         gl!.vertexAttribPointer(A.pos, 2, gl!.FLOAT, false, 0, 0)
-        gl!.uniform4f(uh.uBox, Math.min(gc[0][0], gc[1][0]) - hr, Math.min(gc[0][1], gc[1][1]) - hr, Math.max(gc[0][0], gc[1][0]) + hr, Math.max(gc[0][1], gc[1][1]) + hr)
+        gl!.uniform4f(uh.uBox, Math.min(hc[0][0], hc[1][0]) - hr, Math.min(hc[0][1], hc[1][1]) - hr, Math.max(hc[0][0], hc[1][0]) + hr, Math.max(hc[0][1], hc[1][1]) + hr)
         gl!.uniform2f(uh.uRes, w, h)
         gl!.uniform1f(uh.uDpr, dpr)
-        gl!.uniform2f(uh.uC0, gc[0][0], gc[0][1])
-        gl!.uniform2f(uh.uC1, gc[1][0], gc[1][1])
-        gl!.uniform3fv(uh.uCol0, gcol[0])
-        gl!.uniform3fv(uh.uCol1, gcol[1])
-        gl!.uniform1f(uh.uR, gR)
+        gl!.uniform2f(uh.uC0, hc[0][0], hc[0][1])
+        gl!.uniform2f(uh.uC1, hc[1][0], hc[1][1])
+        gl!.uniform3fv(uh.uCol0, hcol[0])
+        gl!.uniform3fv(uh.uCol1, hcol[1])
+        gl!.uniform1f(uh.uR, hR)
         gl!.uniform1f(uh.uForm, (1 - disp) * orbShare)
         gl!.drawArrays(gl!.TRIANGLE_STRIP, 0, 4)
         gl!.disableVertexAttribArray(A.pos)
@@ -1066,6 +1139,10 @@ export function HeroOrb() {
       const pA = S.A.p ?? [-1, 0, 0, 1], pB = S.B.p ?? [-1, 0, 0, 1]
       gl!.uniform4f(up.uPA, pA[0], pA[1], pA[2], pA[3])
       gl!.uniform4f(up.uPB, pB[0], pB[1], pB[2], pB[3])
+      gl!.uniform1f(up.uFuse, fuse)
+      gl!.uniform2f(up.uFuseC, P.c[0][0], P.c[0][1] - sy)
+      gl!.uniform1f(up.uFuseR, P.R)
+      gl!.uniform3fv(up.uFuseCol, PURPLE)
 
       gl!.drawArrays(gl!.POINTS, 0, drawCount)
     }
