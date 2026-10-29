@@ -71,7 +71,7 @@ export function SiteHeader() {
       </div>
 
       {/* topo = identidade (a constante) · meio = palco da esfera · base = console (o que a escolha reescreve) */}
-      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col justify-between gap-10 px-6 py-16 sm:py-20">
+      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col justify-between gap-10 px-6 py-16 sm:py-20 lg:my-auto lg:max-h-[46rem]">
         {/* data-orb-clear: o canvas mede estes blocos e encaixa a esfera no
             espaço livre entre eles — nunca atrás do texto, em qualquer tela */}
         <div data-orb-clear="top" className="flex max-w-xl flex-col gap-3">
@@ -103,6 +103,16 @@ export function SiteHeader() {
           <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground sm:text-[13px]">
             {ui.header.localeLine}
           </p>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.p
+              key={`stack-${mode}-${lang}`}
+              className="mt-2 text-pretty text-[15px] leading-[1.6] text-foreground/85 sm:text-[17px]"
+              {...swap}
+              transition={fade}
+            >
+              {modes[mode].stack}
+            </motion.p>
+          </AnimatePresence>
         </div>
 
         {/* console: régua de 2px na cor do modo — a transição de 620ms é o

@@ -23,6 +23,7 @@ export type Mode<T = string> = {
   role: T
   tagline: T
   taglineParts: TaglineParts<T>
+  stack: T
   focus: T
   summary: T[]
   projectsIntro: T
@@ -185,6 +186,7 @@ const modes: Record<ModeKey, Mode<L>> = {
       ),
       voice: "sans",
     },
+    stack: same("Docker · Kubernetes · AWS · Cloudflare Workers · Rust"),
     focus: l("Segurança de edge e infra", "Edge security and infra"),
     summary: [
       l(
@@ -220,6 +222,7 @@ const modes: Record<ModeKey, Mode<L>> = {
       after: same("."),
       voice: "sans",
     },
+    stack: same("Node.js · TypeScript · React · PostgreSQL · AWS"),
     focus: l("Produto e APIs", "Product and APIs"),
     summary: [
       l(
@@ -255,6 +258,7 @@ const modes: Record<ModeKey, Mode<L>> = {
       after: same("."),
       voice: "sans",
     },
+    stack: same("Node.js · React · TypeScript · AWS · Docker · Kubernetes"),
     focus: l("A stack inteira", "The whole stack"),
     summary: [
       l(
