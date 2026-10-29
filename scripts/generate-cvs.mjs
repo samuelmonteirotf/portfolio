@@ -1,4 +1,4 @@
-/* Gerador dos CVs em PDF — 3 perfis (devops, fullstack, completo) x 2 idiomas.
+/* Gerador dos CVs em PDF — 2 perfis (devops, fullstack) x 2 idiomas.
  *
  * Uso:
  *   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm i playwright --no-save --legacy-peer-deps
@@ -10,9 +10,8 @@
  * no build do Cloudflare Pages). Instale local com --no-save quando precisar.
  *
  * Saída (em public/): o CV baixado pelo site segue o modo ativo do toggle —
- *   samuel-monteiro-cv-pt.pdf            / -en.pdf            (os dois lados)
+ *   Samuel-Monteiro-PTBR.pdf             / Samuel-Monteiro-EN.pdf  (fullstack e os dois lados)
  *   samuel-monteiro-cv-devops-pt.pdf     / -devops-en.pdf
- *   samuel-monteiro-cv-fullstack-pt.pdf  / -fullstack-en.pdf
  */
 import { chromium } from "playwright"
 
@@ -195,6 +194,13 @@ const SKILLS = {
     dev: { label: "Desenvolvimento & Automação", text: "Python (FastAPI, Web Scraping, Scripts CLI), Node.js (APIs REST, WebSockets, BullMQ, Redis), Rust (Tokio, Axum, Hyper), n8n Workflows, Shell/Bash Scripting para automação de tarefas operacionais" },
     front: { label: "Frontend", text: "React, Next.js, TypeScript, Vite, Tailwind CSS, Zustand, TanStack Query, Zod, Shadcn UI, Three.js" },
     data: { label: "Bancos de Dados & Criptografia", text: "PostgreSQL, TimescaleDB, SQL Server, Redis Pub/Sub, SQLite, LUKS Full Disk Encryption, mTLS" },
+    fsBack: { label: "Backend", text: "Node.js (TypeScript, Express, APIs RESTful, WebSockets), Java e Kotlin (Spring Boot), Python (FastAPI), Rust (Tokio, Axum)" },
+    fsFront: { label: "Frontend", text: "React, Next.js, Vue.js, TypeScript, Vite, Tailwind CSS, Zustand, TanStack Query, Zod, Shadcn UI, design responsivo e UX/UI" },
+    fsData: { label: "Bancos de Dados", text: "PostgreSQL, MongoDB, Redis (caching, Pub/Sub), TimescaleDB, SQL Server, SQLite, modelagem e otimização de queries" },
+    fsArch: { label: "Arquitetura & Mensageria", text: "Microsserviços, APIs RESTful, arquitetura orientada a eventos, Apache Kafka, RabbitMQ, BullMQ, filas e processamento assíncrono" },
+    fsCloud: { label: "Cloud & DevOps", text: "AWS (EC2, S3, RDS), Docker, Docker Compose, Kubernetes, CI/CD (GitHub Actions), Linux, Caddy, Cloudflare Workers, Tailscale, WireGuard" },
+    fsQuality: { label: "Qualidade & Segurança", text: "testes automatizados (unitários, integração e e2e com Jest, Vitest, JUnit, Pytest), Clean Code, SOLID, code review, OWASP, autenticação JWT, mTLS, hardening, rate limiting" },
+    fsAgile: { label: "Metodologias & Idiomas", text: "Scrum, Kanban, Git Flow • Português nativo, Inglês intermediário" },
   },
   en: {
     infra: { label: "DevOps & Infrastructure", text: "Docker, Docker Compose, Linux/Unix SysAdmin (Debian, Arch Linux, macOS), Caddy Server (Reverse Proxy, Automatic SSL), Mesh VPN (Tailscale, WireGuard), SSH Hardening, Networking & Firewalls (IPTables), Git" },
@@ -202,6 +208,13 @@ const SKILLS = {
     dev: { label: "Development & Automation", text: "Python (FastAPI, Web Scraping, CLI Scripts), Node.js (REST APIs, WebSockets, BullMQ, Redis), Rust (Tokio, Axum, Hyper), n8n Workflows, Shell/Bash Scripting for operational task automation" },
     front: { label: "Frontend", text: "React, Next.js, TypeScript, Vite, Tailwind CSS, Zustand, TanStack Query, Zod, Shadcn UI, Three.js" },
     data: { label: "Databases & Cryptography", text: "PostgreSQL, TimescaleDB, SQL Server, Redis Pub/Sub, SQLite, LUKS Full Disk Encryption, mTLS" },
+    fsBack: { label: "Backend", text: "Node.js (TypeScript, Express, RESTful APIs, WebSockets), Java and Kotlin (Spring Boot), Python (FastAPI), Rust (Tokio, Axum)" },
+    fsFront: { label: "Frontend", text: "React, Next.js, Vue.js, TypeScript, Vite, Tailwind CSS, Zustand, TanStack Query, Zod, Shadcn UI, responsive design and UX/UI" },
+    fsData: { label: "Databases", text: "PostgreSQL, MongoDB, Redis (caching, Pub/Sub), TimescaleDB, SQL Server, SQLite, data modeling and query optimization" },
+    fsArch: { label: "Architecture & Messaging", text: "Microservices, RESTful APIs, event-driven architecture, Apache Kafka, RabbitMQ, BullMQ, queues and asynchronous processing" },
+    fsCloud: { label: "Cloud & DevOps", text: "AWS (EC2, S3, RDS), Docker, Docker Compose, Kubernetes, CI/CD (GitHub Actions), Linux, Caddy, Cloudflare Workers, Tailscale, WireGuard" },
+    fsQuality: { label: "Quality & Security", text: "automated testing (unit, integration and e2e with Jest, Vitest, JUnit, Pytest), Clean Code, SOLID, code review, OWASP, JWT authentication, mTLS, hardening, rate limiting" },
+    fsAgile: { label: "Methodologies & Languages", text: "Scrum, Kanban, Git Flow • Portuguese (native), English (intermediate)" },
   },
 }
 
@@ -231,6 +244,11 @@ const PROJECTS = {
       name: "Cortex-Vault: Infraestrutura de Conhecimento",
       stack: "Linux / Shell Script / Python / Tailscale",
       text: "Sistema de alto desempenho para ingestão de dados, sincronizado automaticamente via malha VPN Tailscale entre Arch Linux e macOS. Desenvolvi utilitários em Shell e Python para indexação e pesquisa local veloz.",
+    },
+    realscan: {
+      name: "RealScan: Auditor Externo de Segurança",
+      stack: "Cloudflare Workers / Serverless",
+      text: "Scanner serverless que recebe um domínio e gera relatório com nota de A a F sobre HTTPS, headers de segurança, DNS de e-mail, subdomínios que expõem a origem e segredos vazados no código do cliente, com proteção anti-SSRF.",
     },
     boxopt: {
       name: "BoxOptimizer API",
@@ -264,6 +282,11 @@ const PROJECTS = {
       stack: "Linux / Shell Script / Python / Tailscale",
       text: "High-performance data ingestion system, automatically synchronized via Tailscale VPN mesh between Arch Linux and macOS. Developed Shell and Python utilities for fast local search and indexing.",
     },
+    realscan: {
+      name: "RealScan: External Security Auditor",
+      stack: "Cloudflare Workers / Serverless",
+      text: "Serverless scanner that takes a domain and returns an A to F graded report on HTTPS, security headers, email DNS, subdomains that expose the origin and secrets leaked in client-side code, with an SSRF guard.",
+    },
     boxopt: {
       name: "BoxOptimizer API",
       stack: ".NET 8 / JWT / Docker",
@@ -277,40 +300,60 @@ const PROFILES = {
     devops:
       "Engenheiro de software com mais de 4 anos de experiência em automação de infraestrutura, administração de sistemas Linux e segurança de redes. No dia a dia, provisiono servidores com Docker e Docker Compose, configuro redes mesh seguras com Tailscale e WireGuard e desenvolvo APIs em Python com FastAPI e em Node.js. Trabalho com foco em SRE, hardening e na eliminação de tarefas manuais repetitivas usando código e telemetria.",
     fullstack:
-      "Engenheiro full-stack que entrega o caminho inteiro: da interface em Next.js e React que o usuário usa até os serviços em FastAPI e Node e o schema do PostgreSQL embaixo de tudo. Transito bem por toda a stack: APIs REST tipadas, tempo real com WebSockets, jobs em segundo plano com BullMQ e a modelagem de dados que mantém tudo rápido sob carga. O que eu construo já chega em produção com a própria infraestrutura confiável, sem repasse para outro time.",
-    all:
-      "Engenheiro full-stack e especialista em DevOps e edge na mesma pessoa: entrego o produto e a plataforma em que ele roda. Vou do frontend ao banco de dados (Next.js, React, FastAPI, Node, PostgreSQL) e cuido da infraestrutura por baixo (Docker, Cloudflare Workers, Tailscale, WireGuard, Caddy, hardening). Uma pessoa cobrindo o caminho inteiro: da ideia à produção e à rotina de manter tudo no ar.",
+      "Desenvolvedor Full Stack com mais de 4 anos de experiência construindo APIs de alta performance, microsserviços e interfaces web em TypeScript, com foco em produtos para o mercado financeiro. No backend trabalho com Node.js (TypeScript) e Java/Kotlin (Spring Boot), mensageria com Kafka e RabbitMQ, PostgreSQL, MongoDB e Redis para caching. No frontend, React e Vue.js com foco em UX. Entrego de ponta a ponta: código testado e limpo, pipelines de CI/CD, containers em Docker e Kubernetes e infraestrutura na AWS, com segurança tratada como requisito desde o início. Acostumado a times ágeis (Scrum/Kanban) com autonomia e ownership.",
   },
   en: {
     devops:
       "Software Engineer with 4+ years of experience in infrastructure automation, Linux systems administration, and network security. Day to day, I provision servers with Docker and Docker Compose, configure secure mesh networks with Tailscale and WireGuard, and build APIs in Python (FastAPI) and Node.js. Focused on Site Reliability Engineering (SRE), operational hardening, and eliminating repetitive manual work through code and telemetry.",
     fullstack:
-      "Full-stack engineer who ships the entire path: from the Next.js and React interface users touch to the FastAPI and Node services and the PostgreSQL schema underneath. Comfortable across the stack: typed REST APIs, real time over WebSockets, background jobs with BullMQ, and the data modeling that keeps everything fast under load. What I build reaches production with its own reliable infrastructure, without handing it off to another team.",
-    all:
-      "Full-stack engineer and DevOps and edge specialist in one: I deliver the product and the platform it runs on. I go from the frontend to the database (Next.js, React, FastAPI, Node, PostgreSQL) and take care of the infrastructure underneath (Docker, Cloudflare Workers, Tailscale, WireGuard, Caddy, hardening). One person covering the whole path: from idea to production to keeping it all running.",
+      "Full Stack Developer with 4+ years of experience building high-performance APIs, microservices and web interfaces in TypeScript, focused on financial products. On the backend I work with Node.js (TypeScript) and Java/Kotlin (Spring Boot), messaging with Kafka and RabbitMQ, PostgreSQL, MongoDB and Redis for caching. On the frontend, React and Vue.js with a strong focus on UX. I deliver end to end: clean, tested code, CI/CD pipelines, containers on Docker and Kubernetes and infrastructure on AWS, with security treated as a requirement from day one. Used to agile teams (Scrum/Kanban) with autonomy and ownership.",
   },
 }
 
 /* ------------------------------- os 3 perfis ------------------------------- */
 
+const FULLSTACK_FREELANCE = {
+  pt: {
+    role: "Desenvolvedor Full Stack & Engenheiro de Automação",
+    company: "Freelancer",
+    date: "Abril de 2022 até o presente",
+    bullets: [
+      "Arquitetei e implantei ecossistemas de microsserviços em Node.js (TypeScript) e FastAPI, conteinerizados com Docker, reduzindo o tempo de processamento de requisições em 40%.",
+      "Desenvolvi APIs RESTful e serviços orientados a eventos com Kafka e RabbitMQ, usando Redis como camada de cache e PostgreSQL/MongoDB para persistência.",
+      "Construí interfaces em React e Vue.js com TypeScript, responsivas e centradas na experiência do usuário, consumindo APIs tipadas com validação via Zod.",
+      "Configurei pipelines de CI/CD com testes automatizados e deploy em AWS com Docker e Kubernetes; no Parana-Leads, o deploy automatizado com Caddy e SSL automático reduziu em 70% o tempo de subir novos ambientes.",
+      "Projetei uma rede mesh privada (Tailscale) com autenticação mTLS conectando hosts locais a servidores na nuvem, blindando o tráfego de dados sensíveis.",
+      "Desenvolvi o Cortex-Nexus, pipeline de automação (n8n, Python, IA) de extração e qualificação de leads com 99,7% de entregabilidade e mais de 3.000 leads/mês.",
+    ],
+  },
+  en: {
+    role: "Full Stack Developer & Automation Engineer",
+    company: "Freelancer",
+    date: "April 2022 to Present",
+    bullets: [
+      "Architected and deployed microservices ecosystems in Node.js (TypeScript) and FastAPI, containerized with Docker, reducing request processing times by 40%.",
+      "Built RESTful APIs and event-driven services with Kafka and RabbitMQ, using Redis as a caching layer and PostgreSQL/MongoDB for persistence.",
+      "Built responsive, user-centered interfaces in React and Vue.js with TypeScript, consuming typed APIs validated with Zod.",
+      "Set up CI/CD pipelines with automated tests and deployments to AWS using Docker and Kubernetes; on Parana-Leads, automated deployment with Caddy and automatic SSL cut new environment setup time by 70%.",
+      "Designed a private mesh network (Tailscale) with mTLS authentication connecting local hosts to cloud servers, securing sensitive data traffic.",
+      "Developed Cortex-Nexus, an automation pipeline (n8n, Python, AI) for lead extraction and qualification with 99.7% deliverability and 3,000+ leads per month.",
+    ],
+  },
+}
+
 const MODES = {
   devops: {
-    role: "DevOps & Platform Engineer",
+    role: { pt: "DevOps & Platform Engineer", en: "DevOps & Platform Engineer" },
     skills: ["infra", "edge", "dev", "data"],
     projects: ["aegis", "sentinel", "cortex", "boxopt"],
-    suffix: "-devops",
+    file: { pt: "samuel-monteiro-cv-devops-pt.pdf", en: "samuel-monteiro-cv-devops-en.pdf" },
   },
   fullstack: {
-    role: "Full-Stack Engineer",
-    skills: ["front", "dev", "data"],
-    projects: ["tesstrade", "sixid", "boxopt"],
-    suffix: "-fullstack",
-  },
-  all: {
-    role: "Full-Stack & DevOps Engineer",
-    skills: ["front", "dev", "infra", "edge", "data"],
-    projects: ["tesstrade", "sixid", "aegis", "sentinel", "cortex", "boxopt"],
-    suffix: "",
+    role: { pt: "Desenvolvedor Full Stack", en: "Full Stack Developer" },
+    skills: ["fsBack", "fsFront", "fsData", "fsArch", "fsCloud", "fsQuality", "fsAgile"],
+    projects: ["tesstrade", "sixid", "sentinel", "aegis", "realscan"],
+    freelance: FULLSTACK_FREELANCE,
+    file: { pt: "Samuel-Monteiro-PTBR.pdf", en: "Samuel-Monteiro-EN.pdf" },
   },
 }
 
@@ -320,14 +363,16 @@ const MODES = {
 const browser = await chromium.launch().catch(() => chromium.launch({ channel: "chrome" }))
 for (const lang of ["pt", "en"]) {
   for (const [modeKey, mode] of Object.entries(MODES)) {
+    const jobs = mode.freelance ? [mode.freelance[lang], ...BASE[lang].jobs.slice(1)] : BASE[lang].jobs
     const data = {
       ...BASE[lang],
-      role: mode.role,
+      jobs,
+      role: mode.role[lang],
       profile: PROFILES[lang][modeKey],
       skills: mode.skills.map((k) => SKILLS[lang][k]),
       projects: mode.projects.map((k) => PROJECTS[lang][k]),
     }
-    const file = `samuel-monteiro-cv${mode.suffix}-${lang}.pdf`
+    const file = mode.file[lang]
     const page = await browser.newPage()
     await page.setContent(render(data), { waitUntil: "load" })
     await page.pdf({

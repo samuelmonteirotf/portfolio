@@ -149,6 +149,9 @@ export const modeColors: Record<ModeKey, string> = {
   devops: "#e0555a",
 }
 
+export const resumeFile = (mode: ModeKey, lang: Lang) =>
+  mode === "devops" ? `samuel-monteiro-cv-devops-${lang}.pdf` : lang === "en" ? "Samuel-Monteiro-EN.pdf" : "Samuel-Monteiro-PTBR.pdf"
+
 export const profile = {
   name: "Samuel Monteiro",
   location: l("Curitiba, Brasil", "Curitiba, Brazil"),

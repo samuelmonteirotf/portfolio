@@ -6,6 +6,7 @@ import { ArrowDown } from "lucide-react"
 import { usePillMode } from "@/components/pill-mode"
 import { useLanguage } from "@/components/language"
 import { TerminalTrigger } from "@/components/terminal"
+import { resumeFile } from "@/lib/portfolio-data"
 
 /* Atalho para quem tem 30 segundos: uma barra fixa que aparece depois do
  * hero, com as seções (a atual acesa), o CV do lado ativo sempre à mão e o
@@ -62,8 +63,7 @@ export function QuickNav() {
     }
   }, [mode])
 
-  const suffix = mode === "all" ? "" : `-${mode}`
-  const cv = `/samuel-monteiro-cv${suffix}-${lang}.pdf`
+  const cv = `/${resumeFile(mode, lang)}`
   const links = LINKS[lang].filter((l) => present.includes(l.id))
 
   return (

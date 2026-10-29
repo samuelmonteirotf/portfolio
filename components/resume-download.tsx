@@ -3,15 +3,13 @@
 import { useEffect, useRef, useState } from "react"
 import { usePillMode } from "@/components/pill-mode"
 import { useContent } from "@/components/language"
-import type { ModeKey } from "@/lib/portfolio-data"
+import { resumeFile } from "@/lib/portfolio-data"
 import { cn } from "@/lib/utils"
 
 /* Currículo na voz mono do console: "CV ↓" revela ali mesmo (sem modal) as
  * opções EN e PT. O arquivo servido segue o modo ativo do toggle — quem lê o
  * lado DevOps baixa o CV DevOps (gerados por scripts/generate-cvs.mjs).
  * Fecha ao clicar fora ou apertar Esc. */
-const SUFFIX: Record<ModeKey, string> = { devops: "-devops", fullstack: "-fullstack", all: "" }
-
 const linkStyle =
   "-my-2 py-2 -mx-1 px-1 font-mono text-xs font-medium uppercase tracking-[0.14em] underline-offset-4 outline-none transition-colors hover:text-foreground hover:underline hover:decoration-[color:var(--mode,#e9eef5)] focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--mode,#e9eef5)]"
 
@@ -29,8 +27,8 @@ export function ResumeDownload() {
   }
 
   const resumes = [
-    { lang: "EN", filename: "Samuel Monteiro EN.pdf", aria: ui.resume.enAria },
-    { lang: "PT", filename: "Samuel Monteiro.pdf", aria: ui.resume.ptAria },
+    { lang: "EN", filename: "Samuel-Monteiro-EN.pdf", aria: ui.resume.enAria },
+    { lang: "PT", filename: "Samuel-Monteiro-PTBR.pdf", aria: ui.resume.ptAria },
   ] as const
 
   useEffect(() => {
@@ -75,7 +73,7 @@ export function ResumeDownload() {
         {resumes.map((r) => (
           <a
             key={r.lang}
-            href={`/samuel-monteiro-cv${SUFFIX[mode]}-${r.lang.toLowerCase()}.pdf`}
+            href={`/${resumeFile(mode, r.lang === "EN" ? "en" : "pt")}`}
             download={r.filename}
             tabIndex={open ? 0 : -1}
             aria-label={r.aria}

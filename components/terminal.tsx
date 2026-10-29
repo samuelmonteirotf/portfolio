@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { usePillMode } from "@/components/pill-mode"
 import { useContent, useLanguage } from "@/components/language"
-import { modeColors, projectSlug, type Lang, type ModeKey } from "@/lib/portfolio-data"
+import { modeColors, projectSlug, resumeFile, type Lang, type ModeKey } from "@/lib/portfolio-data"
 import { reasonText, scoreRequest, verdictFor, type SimRequest } from "@/lib/sentinel-score"
 import { SENTINEL_URL, reasonKey, reasonLabel } from "@/lib/sentinel-live"
 
@@ -426,8 +426,7 @@ export function Terminal() {
       }
       case "cv": {
         const l = (args[0] ?? lang).toLowerCase() === "en" ? "en" : "pt"
-        const suffix = mode === "all" ? "" : `-${mode}`
-        const file = `samuel-monteiro-cv${suffix}-${l}.pdf`
+        const file = resumeFile(mode, l)
         const a = document.createElement("a")
         a.href = `/${file}`
         a.download = file
